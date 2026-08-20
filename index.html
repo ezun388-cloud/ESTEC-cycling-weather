@@ -50,9 +50,9 @@
 <body>
 <main>
   <section class="card">
-    <div class="pill">Voorhout ↔ ESTEC</div>
+    <div class="pill">Voorhout ↔ ESTEC · v3</div>
     <h1>🚲 Cycle Weather</h1>
-    <div class="muted">Should I cycle now, or wait for a better window?</div>
+    <div class="muted">Real bicycle-route distance and route-aware wind.</div>
   </section>
 
   <section class="card">
@@ -86,17 +86,18 @@
         <div class="metric"><div class="label">Temperature</div><div id="temp" class="value">—</div></div>
         <div class="metric"><div class="label">Rain now</div><div id="rain" class="value">—</div></div>
         <div class="metric"><div class="label">Wind</div><div id="wind" class="value">—</div></div>
-        <div class="metric"><div class="label">Wind on ride</div><div id="windEffect" class="value">—</div></div>
-        <div class="metric"><div class="label">Approx. distance</div><div id="distance" class="value">—</div></div>
+        <div class="metric"><div class="label">Wind on route</div><div id="windEffect" class="value">—</div></div>
+        <div class="metric"><div class="label">Cycling route</div><div id="distance" class="value">—</div></div>
         <div class="metric"><div class="label">Best departure</div><div id="bestTime" class="value">—</div></div>
       </div>
+      <div id="routeNote" class="tiny" style="margin-top:10px;padding:10px 12px;border-radius:12px;background:#f7f9f8"></div>
     </div>
   </section>
 
   <section id="forecastCard" class="card hidden">
     <h2>Next few hours</h2>
     <div id="timeline" class="timeline"></div>
-    <p class="tiny">Forecast uses Open-Meteo. Wind effect is calculated from the straight-line commute bearing, so it is an estimate rather than turn-by-turn cycling-route wind.</p>
+    <p class="tiny">Weather uses Open-Meteo. Bicycle routing uses BRouter/OpenStreetMap. Wind is weighted along the actual route geometry.</p>
   </section>
 
   <section class="card">
@@ -166,31 +167,52 @@ function bearing(a,b){
   return (deg(Math.atan2(y,x))+360)%360;
 }
 function angularDiff(a,b){return Math.abs(((a-b+540)%360)-180)}
-function windImpact(windFrom, travelBearing, speed){
-  // Wind direction reported meteorologically: direction FROM which wind comes.
-  const headDiff=angularDiff(windFrom, travelBearing);
-  const headComponent=speed*Math.cos(rad(headDiff));
-  if(headComponent>8) return {label:"Strong headwind", score:18, comp:headComponent};
-  if(headComponent>3) return {label:"Headwind", score:9, comp:headComponent};
-  if(headComponent<-8) return {label:"Strong tailwind", score:-8, comp:headComponent};
-  if(headComponent<-3) return {label:"Tailwind", score:-4, comp:headComponent};
-  return {label:"Cross/light", score:2, comp:headComponent};
+function timeLabel(s){return new Date(s).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});}
+
+async function fetchBikeRoute(start,end){
+  const lonlats=`${start.lon},${start.lat}|${end.lon},${end.lat}`;
+  const url=`https://brouter.de/brouter?lonlats=${encodeURIComponent(lonlats)}&profile=trekking&alternativeidx=0&format=geojson`;
+  const r=await fetch(url);
+  if(!r.ok) throw new Error("BRouter route unavailable");
+  const gj=await r.json();
+  let coords=null;
+  if(gj.type==="FeatureCollection" && gj.features?.length) coords=gj.features[0].geometry?.coordinates;
+  else if(gj.type==="Feature") coords=gj.geometry?.coordinates;
+  else if(gj.type==="LineString") coords=gj.coordinates;
+  if(!coords || coords.length<2) throw new Error("No route geometry");
+  return coords.map(c=>({lon:c[0],lat:c[1]}));
 }
-function timeLabel(s){
-  const d=new Date(s);
-  return d.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
+function routeDistance(points){
+  let km=0; for(let i=1;i<points.length;i++) km+=distanceKm(points[i-1],points[i]); return km;
 }
-function scoreSlot(prob, rain, windSpeed, windDir, travelBearing){
-  const wi=windImpact(windDir,travelBearing,windSpeed);
-  let score=(prob||0)*0.55+(rain||0)*38+Math.max(0,windSpeed-20)*1.5+wi.score;
-  return {score,wi};
+function routeMidpoint(points){
+  const total=routeDistance(points), half=total/2; let acc=0;
+  for(let i=1;i<points.length;i++){const d=distanceKm(points[i-1],points[i]); if(acc+d>=half) return points[i]; acc+=d;}
+  return points[Math.floor(points.length/2)];
+}
+function routeWind(points,windFrom,windSpeed){
+  let weighted=0,total=0,maxHead=-999,maxTail=999;
+  for(let i=1;i<points.length;i++){
+    const a=points[i-1],b=points[i],d=distanceKm(a,b); if(d<=0) continue;
+    const br=bearing(a,b), diff=angularDiff(windFrom,br);
+    const head=windSpeed*Math.cos(rad(diff));
+    weighted+=head*d; total+=d; maxHead=Math.max(maxHead,head); maxTail=Math.min(maxTail,head);
+  }
+  const avg=total?weighted/total:0;
+  let label="Cross/light wind";
+  if(avg>8) label="Strong headwind"; else if(avg>3) label="Headwind"; else if(avg<-8) label="Strong tailwind"; else if(avg<-3) label="Tailwind";
+  return {avg,label,maxHead,maxTail};
+}
+function windScore(avg){if(avg>8)return 18;if(avg>3)return 9;if(avg<-8)return -8;if(avg<-3)return -4;return 2;}
+function scoreSlot(prob,rain,windSpeed,routeWindAvg){
+  return (prob||0)*0.55+(rain||0)*38+Math.max(0,windSpeed-20)*1.5+windScore(routeWindAvg);
 }
 async function fetchForecast(lat,lon){
-  const params = new URLSearchParams({
-    latitude:lat, longitude:lon,
+  const params=new URLSearchParams({
+    latitude:lat,longitude:lon,
     current:"temperature_2m,precipitation,rain,wind_speed_10m,wind_direction_10m",
     hourly:"temperature_2m,precipitation_probability,precipitation,rain,wind_speed_10m,wind_direction_10m",
-    forecast_days:"2", wind_speed_unit:"kmh", timezone:"auto"
+    forecast_days:"2",wind_speed_unit:"kmh",timezone:"auto"
   });
   const r=await fetch("https://api.open-meteo.com/v1/forecast?"+params.toString());
   if(!r.ok) throw new Error("Weather service error");
@@ -198,89 +220,76 @@ async function fetchForecast(lat,lon){
 }
 
 $("check").onclick=async()=>{
-  $("status").textContent="Checking your position and the next cycling windows…";
+  $("status").textContent="Finding your bicycle route and checking weather…";
   $("result").classList.add("hidden"); $("forecastCard").classList.add("hidden");
   try{
     const current=await locate();
     const home=getHome();
+    if(direction==="toHome" && !home){$("status").textContent="First save your Home position while you are at home.";return;}
+    const start=direction==="toWork" ? (home||current) : ESTEC;
+    const end=direction==="toWork" ? ESTEC : home;
 
-    if(direction==="toHome" && !home){
-      $("status").textContent="First save your Home position while you are at home. Then the app can evaluate ESTEC → Home.";
-      return;
+    let route,realRoute=true,routeMsg="";
+    try{
+      route=await fetchBikeRoute(start,end);
+      routeMsg="Distance and wind use the bicycle route returned by BRouter/OpenStreetMap.";
+    }catch(e){
+      console.warn(e); realRoute=false; route=[start,end];
+      routeMsg="⚠️ Bicycle routing was temporarily unavailable. Distance and wind are fallback straight-line estimates.";
     }
 
-    const start = direction==="toWork" ? (home || current) : ESTEC;
-    const end   = direction==="toWork" ? ESTEC : home;
-
-    // Use the midpoint for route-weather approximation.
-    const mid={lat:(start.lat+end.lat)/2, lon:(start.lon+end.lon)/2};
+    const dist=routeDistance(route);
+    const mid=routeMidpoint(route);
     const data=await fetchForecast(mid.lat,mid.lon);
     const c=data.current;
-    const travelBearing=bearing(start,end);
-    const dist=distanceKm(start,end);
+    const currentImpact=routeWind(route,c.wind_direction_10m,c.wind_speed_10m);
 
-    // Hourly slots from current hour through next 5 hours.
-    const now=Date.now();
-    const slots=[];
+    const now=Date.now(), slots=[];
     data.hourly.time.forEach((t,i)=>{
       const tm=new Date(t).getTime();
       if(tm>=now-30*60*1000 && tm<=now+5.5*3600*1000){
-        const prob=data.hourly.precipitation_probability[i] ?? 0;
-        const rain=data.hourly.rain[i] ?? data.hourly.precipitation[i] ?? 0;
-        const ws=data.hourly.wind_speed_10m[i] ?? 0;
-        const wd=data.hourly.wind_direction_10m[i] ?? 0;
-        const s=scoreSlot(prob,rain,ws,wd,travelBearing);
-        slots.push({t,prob,rain,ws,wd,score:s.score,wi:s.wi});
+        const prob=data.hourly.precipitation_probability[i]??0;
+        const rain=data.hourly.rain[i]??data.hourly.precipitation[i]??0;
+        const ws=data.hourly.wind_speed_10m[i]??0;
+        const wd=data.hourly.wind_direction_10m[i]??0;
+        const rw=routeWind(route,wd,ws);
+        slots.push({t,prob,rain,ws,wd,rw,score:scoreSlot(prob,rain,ws,rw.avg)});
       }
     });
 
     const best=slots.length ? slots.reduce((a,b)=>a.score<=b.score?a:b) : null;
-    const currentImpact=windImpact(c.wind_direction_10m,travelBearing,c.wind_speed_10m);
-    const nearest=slots[0] || {prob:0,rain:c.rain||0,score:0};
-    const rainNow=(c.rain ?? c.precipitation ?? 0);
-    const risk=Math.max(nearest.prob||0, rainNow>0?80:0);
-    const currentScore=scoreSlot(risk,rainNow,c.wind_speed_10m,c.wind_direction_10m,travelBearing).score;
+    const nearest=slots[0]||{prob:0};
+    const rainNow=c.rain??c.precipitation??0;
+    const risk=Math.max(nearest.prob||0,rainNow>0?80:0);
+    const currentScore=scoreSlot(risk,rainNow,c.wind_speed_10m,currentImpact.avg);
 
-    let verdict, cls, reason;
+    let verdict,cls,reason;
     if(rainNow>=0.5 || risk>=70 || currentScore>=55){
-      verdict="WAIT IF YOU CAN"; cls="bad";
-      reason=`Poor cycling conditions now: ${risk}% rain risk and ${currentImpact.label.toLowerCase()}.`;
+      verdict="WAIT IF YOU CAN";cls="bad";reason=`Poor cycling conditions now: ${risk}% rain risk and ${currentImpact.label.toLowerCase()}.`;
     } else if(risk>=35 || c.wind_speed_10m>=28 || currentScore>=28){
-      verdict="CYCLABLE, BUT MIXED"; cls="ok";
-      reason=`Reasonable, but expect ${risk}% rain risk and ${currentImpact.label.toLowerCase()}.`;
+      verdict="CYCLABLE, BUT MIXED";cls="ok";reason=`Reasonable, but expect ${risk}% rain risk and ${currentImpact.label.toLowerCase()}.`;
     } else {
-      verdict="GOOD TO CYCLE"; cls="good";
-      reason=`Low immediate weather penalty: ${risk}% rain risk, ${currentImpact.label.toLowerCase()}.`;
+      verdict="GOOD TO CYCLE";cls="good";reason=`Low immediate weather penalty: ${risk}% rain risk, ${currentImpact.label.toLowerCase()}.`;
     }
 
-    $("verdict").className="verdict "+cls;
-    $("verdict").textContent=verdict;
-    $("reason").textContent=reason;
+    $("verdict").className="verdict "+cls; $("verdict").textContent=verdict; $("reason").textContent=reason;
     $("temp").textContent=Math.round(c.temperature_2m)+"°C";
-    $("rain").textContent=(rainNow||0).toFixed(1)+" mm";
+    $("rain").textContent=rainNow.toFixed(1)+" mm";
     $("wind").textContent=Math.round(c.wind_speed_10m)+" km/h";
     $("windEffect").textContent=currentImpact.label;
     $("distance").textContent=dist.toFixed(1)+" km";
-    $("bestTime").textContent=best ? timeLabel(best.t) : "Now";
+    $("bestTime").textContent=best?timeLabel(best.t):"Now";
+    $("routeNote").textContent=routeMsg+(realRoute?` Average route headwind component: ${currentImpact.avg.toFixed(1)} km/h.`:"");
 
     $("timeline").innerHTML="";
     slots.slice(0,6).forEach(s=>{
-      const d=document.createElement("div");
-      d.className="slot"+(best&&s.t===best.t?" best":"");
-      d.innerHTML=`<div class="time">${timeLabel(s.t)}</div>
-        <div>🌧️ ${Math.round(s.prob)}%</div>
-        <div>💧 ${(s.rain||0).toFixed(1)} mm</div>
-        <div>💨 ${Math.round(s.ws)} km/h</div>
-        <div class="tiny">${s.wi.label}</div>`;
+      const d=document.createElement("div"); d.className="slot"+(best&&s.t===best.t?" best":"");
+      d.innerHTML=`<div class="time">${timeLabel(s.t)}</div><div>🌧️ ${Math.round(s.prob)}%</div><div>💧 ${(s.rain||0).toFixed(1)} mm</div><div>💨 ${Math.round(s.ws)} km/h</div><div class="tiny">${s.rw.label}</div>`;
       $("timeline").appendChild(d);
     });
-    $("result").classList.remove("hidden");
-    $("forecastCard").classList.remove("hidden");
-    $("status").textContent=home ? "Updated using your saved Home ↔ ESTEC commute." : "Home is not saved yet, so this outbound check uses your current position.";
-  }catch(e){
-    console.error(e);
-    $("status").textContent="Could not complete the check. Confirm location permission and internet access, then try again.";
-  }
+    $("result").classList.remove("hidden"); $("forecastCard").classList.remove("hidden");
+    $("status").textContent=realRoute?"Updated using your Home ↔ ESTEC bicycle route.":"Updated with routing fallback.";
+  }catch(e){console.error(e);$("status").textContent="Could not complete the check. Confirm location permission and internet access, then try again.";}
 };
 
 if("serviceWorker" in navigator){

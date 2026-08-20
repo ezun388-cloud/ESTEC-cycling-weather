@@ -1,7 +1,7 @@
 {
   "name": "ESTEC Cycle Weather",
   "short_name": "Cycle Weather",
-  "description": "Weather and wind guidance for a Voorhout\u2013ESTEC cycling commute.",
+  "description": "Route-aware cycling weather for the Voorhout\u2013ESTEC commute.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
