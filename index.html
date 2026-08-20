@@ -1,287 +1,457 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0b6e4f">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<title>Ride Weather</title>
-<link rel="manifest" href="./manifest.json">
-<link rel="icon" href="./icon-192.png">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<style>
-:root{
- --text:#17211e;--muted:#68766f;--green:#0b6e4f;--green2:#2b8a67;--red:#b42318;--amber:#a86b00;
- --soft:#eef4f2;--soft2:#f8fbfa;--card:#fff;
- font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif
-}
-*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#edf5f1,#f7faf9);color:var(--text)}
-main{max-width:780px;margin:auto;padding:16px 14px 44px}
-.card{background:var(--card);border-radius:24px;padding:18px;margin:14px 0;box-shadow:0 10px 32px rgba(0,0,0,.07)}
-.hero{position:relative;overflow:hidden;padding:0;min-height:250px;background:#123;color:white}
-.hero .bg{position:absolute;inset:0;background:linear-gradient(180deg,rgba(4,31,22,.16),rgba(4,31,22,.77)),url('./hero-photo.jpg') center/cover no-repeat}
-.hero .content{position:relative;z-index:1;padding:20px;display:flex;flex-direction:column;gap:10px;min-height:250px;justify-content:flex-end}
-.pill{display:inline-block;width:max-content;border-radius:999px;background:rgba(255,255,255,.18);padding:7px 12px;font-size:12px;font-weight:800;backdrop-filter:blur(10px)}
-.brandRow{display:flex;align-items:center;gap:14px}.brandIcon{width:64px;height:64px;border-radius:18px;background:url('./app-icon.png') center/cover no-repeat;border:2px solid rgba(255,255,255,.55);box-shadow:0 8px 18px rgba(0,0,0,.25)}
-h1{font-size:34px;line-height:1.05;margin:0}h2{font-size:21px;margin:0 0 12px}.hero p{margin:0;color:rgba(255,255,255,.92)}
-.muted{color:var(--muted);font-size:14px}.tiny{font-size:12px;color:#74837b}
-button{border:0;border-radius:15px;padding:14px 16px;font-size:15px;font-weight:800;cursor:pointer}
-.primary{background:linear-gradient(180deg,var(--green2),var(--green));color:#fff;width:100%;box-shadow:0 8px 18px rgba(11,110,79,.2)}
-.secondary{background:#edf5f1;color:var(--green)}.danger{background:#fff1f1;color:#9d2016}.row{display:flex;gap:10px;flex-wrap:wrap}.row>*{flex:1}
-.toggle{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:6px;background:var(--soft);border-radius:18px}.toggle button{background:transparent;color:#51605a}.toggle button.active{background:#fff;color:var(--green);box-shadow:0 3px 10px rgba(0,0,0,.08)}
-.homeState{display:flex;align-items:center;gap:10px;margin:10px 0 14px}.dot{width:12px;height:12px;border-radius:50%;background:#b8c1bd}.dot.saved{background:var(--green)}
-select,input{width:100%;border:1px solid #d9e5df;background:#fff;border-radius:14px;padding:13px;font-size:16px;color:var(--text)}
-label{display:block;font-size:12px;color:var(--muted);font-weight:700;margin:0 0 6px}.field{margin:10px 0}
-.banner{padding:12px 14px;border-radius:16px;background:#f8fbfa;border:1px solid #eef3f0;margin-top:10px}
-.verdict{font-size:38px;font-weight:900;line-height:1;letter-spacing:-1px;margin:10px 0 8px}.good{color:#0c7b49}.ok{color:#af6e00}.bad{color:#b32318}
-.metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}.metric{background:var(--soft2);border-radius:18px;padding:14px}.metric .label{font-size:12px;color:var(--muted)}.metric .value{font-size:24px;font-weight:900;margin-top:3px;line-height:1.08}
-#map{height:340px;border-radius:18px;overflow:hidden;background:#e9efec}.mapMeta{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:10px}.mapStat{background:var(--soft2);padding:11px;border-radius:14px}.mapStat b{display:block;font-size:18px}
-.windBar{display:flex;height:16px;border-radius:999px;overflow:hidden;margin:10px 0;background:#eee}.windBar span{height:100%}.head{background:#e66a5c}.cross{background:#e8b65a}.tail{background:#5bb98b}
-.infoGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.pointCard{background:var(--soft2);border-radius:16px;padding:12px}.pointCard .hd{font-weight:900;font-size:13px;margin-bottom:4px}
-.timeline{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px}.slot{min-width:178px;background:var(--soft2);border-radius:18px;padding:12px}.slot.best{outline:2px solid var(--green);background:#edf8f3}.slot .time{font-size:18px;font-weight:900;margin-bottom:6px}.slot .line{font-size:14px;color:#33413a}
-.hidden{display:none!important}.status{margin-top:10px;font-size:14px}.routeSuccess{background:#edf8f3;border-color:#d5ede1}.routeFail{background:#fff5e9;border-color:#f3dfbd}
-details summary{font-weight:900;cursor:pointer;color:var(--green)}
-@media(max-width:520px){.infoGrid,.mapMeta{grid-template-columns:1fr}.verdict{font-size:32px}#map{height:290px}}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0b6e4f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>ESTEC Ride Planner</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" href="./icon-192.png">
+  <style>
+    :root{
+      --bg:#f4f7f7; --card:#ffffff; --text:#17211e; --muted:#66756e;
+      --green:#0b6e4f; --green2:#2b8a67; --amber:#b97a09; --red:#b1271b;
+      --soft:#eef4f2; --soft2:#f8fbfa;
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(180deg,#edf5f1,#f7faf9);color:var(--text)}
+    main{max-width:760px;margin:auto;padding:16px 14px 44px}
+    .card{background:var(--card);border-radius:24px;padding:18px;margin:14px 0;box-shadow:0 10px 32px rgba(0,0,0,.07)}
+    .hero{
+      position:relative; overflow:hidden; padding:0; min-height:260px;
+      background:#123;
+      color:white;
+    }
+    .hero .bg{
+      position:absolute; inset:0; background:
+        linear-gradient(180deg,rgba(4,31,22,.18),rgba(4,31,22,.76)),
+        url('./hero-photo.jpg') center/cover no-repeat;
+      filter:saturate(1.05);
+    }
+    .hero .content{position:relative; z-index:1; padding:20px; display:flex; flex-direction:column; gap:10px; min-height:260px; justify-content:flex-end}
+    .pill{display:inline-block; width:max-content; border-radius:999px; background:rgba(255,255,255,.18); color:#fff; padding:7px 12px; font-size:12px; font-weight:800; backdrop-filter:blur(10px)}
+    .brandRow{display:flex; align-items:center; gap:14px}
+    .brandIcon{width:64px; height:64px; border-radius:18px; background:url('./app-icon.png') center/cover no-repeat; box-shadow:0 8px 18px rgba(0,0,0,.25); border:2px solid rgba(255,255,255,.55); flex:0 0 auto}
+    h1{font-size:34px; line-height:1.05; margin:0}
+    .hero p{margin:0; color:rgba(255,255,255,.92); font-size:15px}
+    h2{font-size:21px; margin:0 0 12px}
+    .muted{color:var(--muted); font-size:14px}
+    .tiny{font-size:12px;color:#74837b}
+    .row{display:flex; gap:10px; flex-wrap:wrap}
+    .row>*{flex:1}
+    .toggle{display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:6px; background:var(--soft); border-radius:18px}
+    .toggle button{border:0; background:transparent; color:#51605a; font-size:15px; font-weight:800; padding:14px 12px; border-radius:14px}
+    .toggle button.active{background:#fff; color:var(--green); box-shadow:0 3px 10px rgba(0,0,0,.08)}
+    .homeState{display:flex; align-items:center; gap:10px; margin:10px 0 14px}
+    .dot{width:12px; height:12px; border-radius:50%; background:#b8c1bd}
+    .dot.saved{background:var(--green)}
+    button{border:0; border-radius:15px; padding:14px 16px; font-size:15px; font-weight:800}
+    .primary{background:linear-gradient(180deg,var(--green2),var(--green)); color:#fff; width:100%; box-shadow:0 8px 18px rgba(11,110,79,.2)}
+    .secondary{background:#edf5f1; color:var(--green)}
+    .danger{background:#fff1f1; color:#9d2016}
+    .status{margin-top:10px; font-size:14px}
+    .verdict{font-size:38px; font-weight:900; line-height:1; letter-spacing:-1px; margin:10px 0 8px}
+    .good{color:#0c7b49}.ok{color:#af6e00}.bad{color:#b32318}
+    .metrics{display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-top:12px}
+    .metric{background:var(--soft2); border-radius:18px; padding:14px}
+    .metric .label{font-size:12px; color:var(--muted)}
+    .metric .value{font-size:24px; font-weight:900; margin-top:3px; line-height:1.08}
+    .banner{padding:12px 14px; border-radius:16px; background:#f8fbfa; border:1px solid #eef3f0; margin-top:10px}
+    .infoGrid{display:grid; grid-template-columns:repeat(3,1fr); gap:10px}
+    .pointCard{background:var(--soft2); border-radius:16px; padding:12px}
+    .pointCard .hd{font-weight:900; font-size:13px; margin-bottom:4px}
+    .pointCard .v{font-size:14px}
+    .timeline{display:flex; gap:10px; overflow-x:auto; padding-bottom:6px}
+    .slot{min-width:170px; background:var(--soft2); border-radius:18px; padding:12px}
+    .slot.best{outline:2px solid var(--green); background:#edf8f3}
+    .slot .time{font-size:18px; font-weight:900; margin-bottom:6px}
+    .slot .line{font-size:14px; color:#33413a}
+    .sectionSpacer{height:2px}
+    .hidden{display:none!important}
+    input[type=number]{width:100%; border:1px solid #d9e5df; background:#fff; border-radius:14px; padding:13px; font-size:16px}
+    .subtleCard{background:linear-gradient(180deg,#f8fbfa,#f1f6f4); border:1px solid #e6efeb}
+  </style>
 </head>
 <body>
 <main>
-<section class="card hero">
- <div class="bg"></div>
- <div class="content">
-  <div class="pill">OpenStreetMap bicycle routing · v6</div>
-  <div class="brandRow"><div class="brandIcon"></div><div><h1>Ride Weather</h1><p>Real route. Real wind direction.</p></div></div>
- </div>
-</section>
+  <section class="card hero">
+    <div class="bg"></div>
+    <div class="content">
+      <div class="pill">Voorhout ↔ ESTEC · v4</div>
+      <div class="brandRow">
+        <div class="brandIcon"></div>
+        <div>
+          <h1>ESTEC Ride Planner</h1>
+          <p>Your personal cycle weather dashboard.</p>
+        </div>
+      </div>
+    </div>
+  </section>
 
-<section class="card">
- <h2>1. Home & destination</h2>
- <div class="homeState"><span id="homeDot" class="dot"></span><span id="homeText" class="muted"></span></div>
- <div class="row"><button id="saveHome" class="secondary">📍 Save current position as Home</button><button id="clearHome" class="danger">Forget Home</button></div>
- <div class="field"><label>Destination</label><select id="destinationSelect"></select></div>
- <div id="destSummary" class="banner muted"></div>
- <details style="margin-top:14px">
-  <summary>+ Add another destination</summary>
-  <div class="field"><label>Name</label><input id="newDestName" placeholder="School, Gym, Station…"></div>
-  <div class="field"><label>Address / place</label><input id="newDestAddress" placeholder="Leiden Centraal, Netherlands"></div>
-  <div class="row"><button id="searchDestination" class="secondary">🔎 Find address</button><button id="useCurrentDestination" class="secondary">📍 Use current location</button></div>
-  <div id="destSearchStatus" class="tiny" style="margin-top:8px"></div>
- </details>
-</section>
+  <section class="card">
+    <h2>1. Your commute</h2>
+    <div class="toggle">
+      <button id="toWork" class="active">🏠 Home → ESTEC</button>
+      <button id="toHome">🛰️ ESTEC → Home</button>
+    </div>
 
-<section class="card">
- <h2>2. Direction</h2>
- <div class="toggle"><button id="toDestination" class="active">🏠 Home → Destination</button><button id="toHome">📍 Destination → Home</button></div>
-</section>
+    <div class="homeState">
+      <span id="homeDot" class="dot"></span>
+      <span id="homeText" class="muted">Home position not saved yet</span>
+    </div>
 
-<section class="card">
- <h2>3. Check your ride</h2>
- <button id="check" class="primary">Calculate route & weather</button>
- <div id="status" class="status muted">ESTEC is selected by default.</div>
- <div id="result" class="hidden">
-  <div id="verdict" class="verdict"></div><div id="reason" class="muted"></div>
-  <div class="metrics">
-   <div class="metric"><div class="label">Bicycle distance</div><div id="distance" class="value">—</div></div>
-   <div class="metric"><div class="label">Valhalla ride time</div><div id="routeTime" class="value">—</div></div>
-   <div class="metric"><div class="label">Wind speed</div><div id="wind" class="value">—</div></div>
-   <div class="metric"><div class="label">Overall wind</div><div id="windEffect" class="value">—</div></div>
-   <div class="metric"><div class="label">Headwind distance</div><div id="headKm" class="value">—</div></div>
-   <div class="metric"><div class="label">Tailwind distance</div><div id="tailKm" class="value">—</div></div>
-   <div class="metric"><div class="label">Temperature</div><div id="temp" class="value">—</div></div>
-   <div class="metric"><div class="label">Best departure</div><div id="bestTime" class="value">—</div></div>
-  </div>
-  <div id="routeNote" class="banner tiny"></div>
- </div>
-</section>
+    <div class="row">
+      <button id="saveHome" class="secondary">📍 Save current position as Home</button>
+      <button id="clearHome" class="danger">Forget Home</button>
+    </div>
 
-<section id="mapCard" class="card hidden">
- <h2>4. Your bicycle route</h2>
- <div id="map"></div>
- <div class="mapMeta">
-  <div class="mapStat"><span class="tiny">Route points</span><b id="routePoints">—</b></div>
-  <div class="mapStat"><span class="tiny">Headwind share</span><b id="headPct">—</b></div>
-  <div class="mapStat"><span class="tiny">Tailwind share</span><b id="tailPct">—</b></div>
- </div>
- <div class="windBar"><span id="barHead" class="head"></span><span id="barCross" class="cross"></span><span id="barTail" class="tail"></span></div>
- <div class="tiny">Red = headwind segments · amber = cross/light wind · green = tailwind segments.</div>
-</section>
+    <div class="banner subtleCard">
+      <div style="font-weight:900; margin-bottom:6px;">Route distance override</div>
+      <div class="muted" style="margin-bottom:8px;">If the route engine fails or your route is longer than a straight line, store your real cycling distance here once.</div>
+      <div class="row" style="align-items:end">
+        <div>
+          <div class="tiny" style="margin-bottom:6px;">Actual cycling distance (km)</div>
+          <input id="distanceOverride" type="number" step="0.1" min="0" placeholder="e.g. 7.8">
+        </div>
+        <div style="flex:0 0 150px">
+          <button id="saveDistance" class="secondary" style="width:100%">Save distance</button>
+        </div>
+      </div>
+      <div id="distanceSavedText" class="tiny" style="margin-top:8px;"></div>
+    </div>
+  </section>
 
-<section id="rainPanel" class="card hidden">
- <h2>5. Rain across the route</h2>
- <div class="infoGrid">
-  <div class="pointCard"><div class="hd">🏠 Start</div><div id="rainStart">—</div></div>
-  <div class="pointCard"><div class="hd">🚲 Mid-route</div><div id="rainMid">—</div></div>
-  <div class="pointCard"><div class="hd">📍 Destination</div><div id="rainEnd">—</div></div>
- </div>
-</section>
+  <section class="card">
+    <h2>2. Check conditions</h2>
+    <button id="check" class="primary">Check my ride now</button>
+    <div id="status" class="status muted">This version compares Home, route midpoint, and ESTEC weather.</div>
 
-<section id="forecastCard" class="card hidden">
- <h2>6. Best hours ahead</h2><div id="timeline" class="timeline"></div>
- <div class="tiny" style="margin-top:8px">Rain is checked at multiple places on the route. Forecasts can still miss very local showers.</div>
-</section>
+    <div id="result" class="hidden">
+      <div id="verdict" class="verdict">—</div>
+      <div id="reason" class="muted"></div>
+
+      <div class="metrics">
+        <div class="metric"><div class="label">Temperature</div><div id="temp" class="value">—</div></div>
+        <div class="metric"><div class="label">Wind</div><div id="wind" class="value">—</div></div>
+        <div class="metric"><div class="label">Wind on route</div><div id="windEffect" class="value">—</div></div>
+        <div class="metric"><div class="label">Cycling route</div><div id="distance" class="value">—</div></div>
+        <div class="metric"><div class="label">Est. ride time</div><div id="rideTime" class="value">—</div></div>
+        <div class="metric"><div class="label">Best departure</div><div id="bestTime" class="value">—</div></div>
+      </div>
+
+      <div id="routeNote" class="banner tiny"></div>
+    </div>
+  </section>
+
+  <section id="rainPanel" class="card hidden">
+    <h2>3. Rain view right now</h2>
+    <div class="infoGrid">
+      <div class="pointCard">
+        <div class="hd">🏠 Home</div>
+        <div class="v" id="homeRainNow">—</div>
+      </div>
+      <div class="pointCard">
+        <div class="hd">🚲 Mid-route</div>
+        <div class="v" id="midRainNow">—</div>
+      </div>
+      <div class="pointCard">
+        <div class="hd">🛰️ ESTEC</div>
+        <div class="v" id="estecRainNow">—</div>
+      </div>
+    </div>
+    <div class="tiny" style="margin-top:10px;">This helps avoid the “it says rain, but not at home” problem by showing different points along the commute.</div>
+  </section>
+
+  <section id="forecastCard" class="card hidden">
+    <h2>4. Best hours ahead</h2>
+    <div id="timeline" class="timeline"></div>
+    <div class="tiny" style="margin-top:8px;">Each card combines rain at Home, route midpoint and ESTEC, plus wind. Weather remains model-based, so very local showers can still differ.</div>
+  </section>
 </main>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-const ESTEC={id:"estec",name:"ESA ESTEC",address:"Keplerlaan 1, Noordwijk",lat:52.218883,lon:4.419712,builtin:true};
-let direction="toDestination",map=null,routeLayer=null,markerLayer=null;
-const $=id=>document.getElementById(id);
+const ESTEC = {lat:52.218883, lon:4.419712, name:"ESTEC"};
+let direction = "toWork";
+const $ = id => document.getElementById(id);
 
-function loadDestinations(){let c=[];try{c=JSON.parse(localStorage.getItem("cycleDestinations")||"[]")}catch{}return[ESTEC,...c]}
-function saveDestinations(all){localStorage.setItem("cycleDestinations",JSON.stringify(all.filter(x=>!x.builtin)))}
-function selectedId(){return localStorage.getItem("selectedDestinationId")||"estec"}
-function setSelectedId(id){localStorage.setItem("selectedDestinationId",id)}
-function selectedDest(){return loadDestinations().find(x=>x.id===selectedId())||ESTEC}
-function getHome(){try{return JSON.parse(localStorage.getItem("cycleHome")||"null")}catch{return null}}
-function refreshUI(){
- const h=getHome();$("homeDot").className="dot"+(h?" saved":"");$("homeText").textContent=h?"Home position saved on this device ✓":"Home position not saved yet";
- const all=loadDestinations(),cur=selectedDest();$("destinationSelect").innerHTML="";
- all.forEach(d=>{const o=document.createElement("option");o.value=d.id;o.textContent=d.name+(d.id==="estec"?" (default)":"");o.selected=d.id===cur.id;$("destinationSelect").appendChild(o)});
- $("destSummary").textContent=`${cur.name} — ${cur.address||`${cur.lat.toFixed(5)}, ${cur.lon.toFixed(5)}`}`;
+function getHome(){ try{return JSON.parse(localStorage.getItem("cycleHome")||"null")}catch{return null} }
+function getDistanceOverride(){
+  const v = localStorage.getItem("cycleRouteKm");
+  return v ? Number(v) : null;
 }
-refreshUI();
-$("destinationSelect").onchange=()=>{setSelectedId($("destinationSelect").value);refreshUI()};
-$("toDestination").onclick=()=>{direction="toDestination";$("toDestination").classList.add("active");$("toHome").classList.remove("active")};
-$("toHome").onclick=()=>{direction="toHome";$("toHome").classList.add("active");$("toDestination").classList.remove("active")};
+function setDistanceOverride(v){
+  if(v==null || isNaN(v) || v<=0){ localStorage.removeItem("cycleRouteKm"); return; }
+  localStorage.setItem("cycleRouteKm", String(v));
+}
+function refreshHomeUI(){
+  const h=getHome();
+  $("homeDot").className = "dot" + (h?" saved":"");
+  $("homeText").textContent = h ? "Home position saved on this device ✓" : "Home position not saved yet";
+  const d=getDistanceOverride();
+  $("distanceOverride").value = d || "";
+  $("distanceSavedText").textContent = d ? `Saved route distance: ${d.toFixed(1)} km` : "No custom route distance saved yet.";
+}
+refreshHomeUI();
 
-function locate(){return new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(p=>res({lat:p.coords.latitude,lon:p.coords.longitude}),rej,{enableHighAccuracy:true,timeout:15000,maximumAge:60000}))}
-$("saveHome").onclick=async()=>{try{localStorage.setItem("cycleHome",JSON.stringify(await locate()));refreshUI();$("status").textContent="Home saved."}catch{$("status").textContent="Could not save Home."}};
-$("clearHome").onclick=()=>{localStorage.removeItem("cycleHome");refreshUI()};
-function makeId(){return"d"+Date.now().toString(36)}
-async function addDest(name,address,p){const all=loadDestinations(),d={id:makeId(),name:name||"Destination",address:address||"",lat:p.lat,lon:p.lon};saveDestinations([...all,d]);setSelectedId(d.id);refreshUI()}
-$("useCurrentDestination").onclick=async()=>{try{const p=await locate();await addDest($("newDestName").value.trim()||"Current location","Current GPS position",p);$("destSearchStatus").textContent="Saved."}catch{$("destSearchStatus").textContent="Could not get GPS."}};
-$("searchDestination").onclick=async()=>{
- const q=$("newDestAddress").value.trim();if(!q){$("destSearchStatus").textContent="Enter an address.";return}
- $("destSearchStatus").textContent="Searching…";
- try{const r=await fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q="+encodeURIComponent(q),{headers:{"Accept":"application/json"}});const a=await r.json();if(!a.length)throw 0;const x=a[0];await addDest($("newDestName").value.trim()||x.display_name.split(",")[0],x.display_name,{lat:+x.lat,lon:+x.lon});$("destSearchStatus").textContent="Saved and selected."}catch{$("destSearchStatus").textContent="Address search failed."}
+$("toWork").onclick=()=>{direction="toWork";$("toWork").classList.add("active");$("toHome").classList.remove("active");};
+$("toHome").onclick=()=>{direction="toHome";$("toHome").classList.add("active");$("toWork").classList.remove("active");};
+
+$("saveDistance").onclick=()=>{
+  const v = Number($("distanceOverride").value);
+  if(!v || v<=0){ setDistanceOverride(null); $("distanceSavedText").textContent="Custom route distance cleared."; return; }
+  setDistanceOverride(v);
+  $("distanceSavedText").textContent=`Saved route distance: ${v.toFixed(1)} km`;
 };
 
-const rad=x=>x*Math.PI/180,deg=x=>x*180/Math.PI;
-function hav(a,b){const R=6371,dLat=rad(b.lat-a.lat),dLon=rad(b.lon-a.lon),q=Math.sin(dLat/2)**2+Math.cos(rad(a.lat))*Math.cos(rad(b.lat))*Math.sin(dLon/2)**2;return 2*R*Math.asin(Math.sqrt(q))}
-function bearing(a,b){const y=Math.sin(rad(b.lon-a.lon))*Math.cos(rad(b.lat)),x=Math.cos(rad(a.lat))*Math.sin(rad(b.lat))-Math.sin(rad(a.lat))*Math.cos(rad(b.lat))*Math.cos(rad(b.lon-a.lon));return(deg(Math.atan2(y,x))+360)%360}
-function diff(a,b){return Math.abs(((a-b+540)%360)-180)}
-
-function decodePolyline6(str){
- let index=0,lat=0,lng=0,out=[],factor=1e6;
- while(index<str.length){
-  let shift=0,result=0,b;
-  do{b=str.charCodeAt(index++)-63;result|=(b&0x1f)<<shift;shift+=5}while(b>=0x20);
-  lat += (result&1)?~(result>>1):(result>>1);
-  shift=0;result=0;
-  do{b=str.charCodeAt(index++)-63;result|=(b&0x1f)<<shift;shift+=5}while(b>=0x20);
-  lng += (result&1)?~(result>>1):(result>>1);
-  out.push({lat:lat/factor,lon:lng/factor});
- }
- return out
+function locate(){
+  return new Promise((resolve,reject)=>{
+    if(!navigator.geolocation) return reject(new Error("Location unavailable"));
+    navigator.geolocation.getCurrentPosition(
+      p=>resolve({lat:p.coords.latitude, lon:p.coords.longitude}),
+      reject,
+      {enableHighAccuracy:true, timeout:15000, maximumAge:60000}
+    );
+  });
 }
-function geometryFromValhalla(data){
- const leg=data?.trip?.legs?.[0];if(!leg)throw new Error("No route leg");
- if(Array.isArray(leg.shape)){return leg.shape.map(x=>({lat:x.lat??x[1],lon:x.lon??x[0]}))}
- if(typeof leg.shape==="string")return decodePolyline6(leg.shape);
- if(leg.shape?.coordinates)return leg.shape.coordinates.map(c=>({lon:c[0],lat:c[1]}));
- throw new Error("No route shape")
-}
-async function valhallaRoute(start,end){
- const payload={locations:[{lat:start.lat,lon:start.lon},{lat:end.lat,lon:end.lon}],costing:"bicycle",costing_options:{bicycle:{bicycle_type:"hybrid",cycling_speed:16,use_hills:0.4,use_roads:0.2}},directions_options:{units:"kilometers"},shape_format:"polyline6"};
- const base="https://valhalla.openstreetmap.de/route";
- let lastErr=null;
- // GET avoids browser preflight on some public endpoints.
- try{
-  const r=await fetch(base+"?json="+encodeURIComponent(JSON.stringify(payload)));
-  if(!r.ok)throw new Error("GET "+r.status);
-  const d=await r.json();return {data:d,points:geometryFromValhalla(d),method:"Valhalla GET"};
- }catch(e){lastErr=e}
- try{
-  const r=await fetch(base,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
-  if(!r.ok)throw new Error("POST "+r.status);
-  const d=await r.json();return {data:d,points:geometryFromValhalla(d),method:"Valhalla POST"};
- }catch(e){lastErr=e}
- throw lastErr||new Error("Valhalla unavailable")
-}
-function routeDistance(points){let d=0;for(let i=1;i<points.length;i++)d+=hav(points[i-1],points[i]);return d}
-function sampleRoute(points,n=5){
- if(points.length<=n)return points;
- const cum=[0];for(let i=1;i<points.length;i++)cum.push(cum[i-1]+hav(points[i-1],points[i]));
- const total=cum[cum.length-1],out=[];
- for(let k=0;k<n;k++){const target=total*k/(n-1);let i=1;while(i<cum.length&&cum[i]<target)i++;out.push(points[Math.min(i,points.length-1)])}
- return out
-}
-function segmentWind(points,windFrom,windSpeed){
- let headKm=0,tailKm=0,crossKm=0,weighted=0,total=0;
- for(let i=1;i<points.length;i++){
-  const d=hav(points[i-1],points[i]);if(!d)continue;
-  const component=windSpeed*Math.cos(rad(diff(windFrom,bearing(points[i-1],points[i]))));
-  if(component>3)headKm+=d;else if(component<-3)tailKm+=d;else crossKm+=d;
-  weighted+=component*d;total+=d
- }
- const avg=total?weighted/total:0;let label="Cross/light wind";
- if(avg>8)label="Strong headwind";else if(avg>3)label="Headwind";else if(avg<-8)label="Strong tailwind";else if(avg<-3)label="Tailwind";
- return{avg,label,headKm,tailKm,crossKm,total}
-}
-function windScore(avg){if(avg>8)return18;if(avg>3)return9;if(avg<-8)return-8;if(avg<-3)return-4;return2}
-async function wx(p){
- const q=new URLSearchParams({latitude:p.lat,longitude:p.lon,current:"temperature_2m,precipitation,rain,wind_speed_10m,wind_direction_10m",hourly:"precipitation_probability,precipitation,rain,temperature_2m,wind_speed_10m,wind_direction_10m",forecast_days:"2",wind_speed_unit:"kmh",timezone:"auto"});
- const r=await fetch("https://api.open-meteo.com/v1/forecast?"+q);if(!r.ok)throw new Error("weather");return r.json()
-}
-function maxv(a){return Math.max(...a.map(x=>x||0))}
-function timeLabel(s){return new Date(s).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}
-function rainLabel(w){return `${Math.round(w.hourly.precipitation_probability[0]||0)}% · ${((w.current.rain??w.current.precipitation)||0).toFixed(1)} mm`}
-function initMap(){
- if(map||typeof L==="undefined")return;
- map=L.map("map",{zoomControl:true});
- L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:'&copy; OpenStreetMap contributors'}).addTo(map)
-}
-function drawMap(points,start,end){
- initMap();if(!map)return;
- if(routeLayer)routeLayer.remove();if(markerLayer)markerLayer.remove();
- routeLayer=L.polyline(points.map(p=>[p.lat,p.lon]),{weight:6,opacity:.85}).addTo(map);
- markerLayer=L.layerGroup([L.marker([start.lat,start.lon]).bindPopup("Start"),L.marker([end.lat,end.lon]).bindPopup("Destination")]).addTo(map);
- map.fitBounds(routeLayer.getBounds(),{padding:[22,22]});setTimeout(()=>map.invalidateSize(),100)
-}
-
-$("check").onclick=async()=>{
- $("status").textContent="Calculating bicycle route…";["result","mapCard","rainPanel","forecastCard"].forEach(id=>$(id).classList.add("hidden"));
- try{
-  const home=getHome(),dest=selectedDest();if(!home){$("status").textContent="Save Home first.";return}
-  const start=direction==="toDestination"?home:dest,end=direction==="toDestination"?dest:home;
-  let vr;
-  try{vr=await valhallaRoute(start,end)}
-  catch(e){$("status").textContent="Valhalla bicycle routing is unavailable from this browser right now. No false straight-line cycling distance will be shown.";throw e}
-  const points=vr.points,distance=routeDistance(points),summary=vr.data.trip?.summary||{},routeSecs=summary.time||0;
-  $("status").textContent="Route found. Checking weather along it…";
-  const samples=sampleRoute(points,5),weather=await Promise.all(samples.map(wx)),midWx=weather[Math.floor(weather.length/2)];
-  const rw=segmentWind(points,midWx.current.wind_direction_10m,midWx.current.wind_speed_10m);
-  const probs=weather.map(w=>w.hourly.precipitation_probability[0]||0),rains=weather.map(w=>(w.current.rain??w.current.precipitation)||0);
-  const prob=maxv(probs),rain=maxv(rains),score=prob*.55+rain*38+Math.max(0,midWx.current.wind_speed_10m-20)*1.5+windScore(rw.avg);
-  let verdict,cls,reason;if(rain>=.5||prob>=70||score>=55){verdict="WAIT IF YOU CAN";cls="bad";reason=`Route weather is poor: up to ${prob}% rain risk and ${rw.label.toLowerCase()}.`}
-  else if(prob>=35||midWx.current.wind_speed_10m>=28||score>=28){verdict="CYCLABLE, BUT MIXED";cls="ok";reason=`Route is rideable, with up to ${prob}% rain risk and ${rw.label.toLowerCase()}.`}
-  else{verdict="GOOD TO CYCLE";cls="good";reason=`Low weather penalty along the route: up to ${prob}% rain risk and ${rw.label.toLowerCase()}.`}
-  const slots=[],now=Date.now();
-  for(let i=0;i<weather[0].hourly.time.length;i++){
-   const t=weather[0].hourly.time[i],tm=new Date(t).getTime();if(tm<now-1800000||tm>now+19800000)continue;
-   const pp=maxv(weather.map(w=>w.hourly.precipitation_probability[i]||0));
-   const rr=maxv(weather.map(w=>w.hourly.rain[i]??w.hourly.precipitation[i]??0));
-   const sw=weather[Math.floor(weather.length/2)],rwi=segmentWind(points,sw.hourly.wind_direction_10m[i]||0,sw.hourly.wind_speed_10m[i]||0);
-   const s=pp*.55+rr*38+Math.max(0,(sw.hourly.wind_speed_10m[i]||0)-20)*1.5+windScore(rwi.avg);
-   slots.push({t,pp,rr,rwi,wind:sw.hourly.wind_speed_10m[i]||0,score:s})
+$("saveHome").onclick=async()=>{
+  $("status").textContent="Getting your current position…";
+  try{
+    const p=await locate();
+    localStorage.setItem("cycleHome", JSON.stringify(p));
+    refreshHomeUI();
+    $("status").textContent="Home saved on this device.";
+  }catch(e){
+    $("status").textContent="Could not save Home. Check location permission.";
   }
-  const best=slots.length?slots.reduce((a,b)=>a.score<=b.score?a:b):null;
-  $("verdict").className="verdict "+cls;$("verdict").textContent=verdict;$("reason").textContent=reason;
-  $("distance").textContent=distance.toFixed(1)+" km";$("routeTime").textContent=routeSecs?Math.round(routeSecs/60)+" min":"—";
-  $("wind").textContent=Math.round(midWx.current.wind_speed_10m)+" km/h";$("windEffect").textContent=rw.label;
-  $("headKm").textContent=rw.headKm.toFixed(1)+" km";$("tailKm").textContent=rw.tailKm.toFixed(1)+" km";
-  $("temp").textContent=Math.round(weather[0].current.temperature_2m)+"°C";$("bestTime").textContent=best?timeLabel(best.t):"Now";
-  $("routeNote").className="banner tiny routeSuccess";$("routeNote").textContent=`✓ Real OpenStreetMap bicycle route via ${vr.method}. ${points.length} geometry points. Distance comes from the route shape, not a straight line.`;
-  $("routePoints").textContent=points.length;
-  $("headPct").textContent=Math.round(rw.headKm/rw.total*100)+"%";$("tailPct").textContent=Math.round(rw.tailKm/rw.total*100)+"%";
-  $("barHead").style.width=(rw.headKm/rw.total*100)+"%";$("barCross").style.width=(rw.crossKm/rw.total*100)+"%";$("barTail").style.width=(rw.tailKm/rw.total*100)+"%";
-  $("rainStart").textContent=rainLabel(weather[0]);$("rainMid").textContent=rainLabel(weather[Math.floor(weather.length/2)]);$("rainEnd").textContent=rainLabel(weather[weather.length-1]);
-  $("timeline").innerHTML="";slots.slice(0,6).forEach(s=>{const e=document.createElement("div");e.className="slot"+(best&&s.t===best.t?" best":"");e.innerHTML=`<div class="time">${timeLabel(s.t)}</div><div class="line">🌧️ Max route risk ${Math.round(s.pp)}%</div><div class="line">💧 Max route rain ${s.rr.toFixed(1)} mm</div><div class="line">💨 ${Math.round(s.wind)} km/h</div><div class="line">${s.rwi.label}</div>`;$("timeline").appendChild(e)});
-  ["result","mapCard","rainPanel","forecastCard"].forEach(id=>$(id).classList.remove("hidden"));drawMap(points,start,end);$("status").textContent=`Updated for ${dest.name}.`;
- }catch(e){console.error(e)}
 };
-if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js"));
+$("clearHome").onclick=()=>{
+  localStorage.removeItem("cycleHome");
+  refreshHomeUI();
+  $("status").textContent="Saved Home removed.";
+};
+
+const rad=x=>x*Math.PI/180, deg=x=>x*180/Math.PI;
+function hav(a,b){
+  const R=6371, dLat=rad(b.lat-a.lat), dLon=rad(b.lon-a.lon);
+  const q=Math.sin(dLat/2)**2 + Math.cos(rad(a.lat))*Math.cos(rad(b.lat))*Math.sin(dLon/2)**2;
+  return 2*R*Math.asin(Math.sqrt(q));
+}
+function bearing(a,b){
+  const y=Math.sin(rad(b.lon-a.lon))*Math.cos(rad(b.lat));
+  const x=Math.cos(rad(a.lat))*Math.sin(rad(b.lat))-Math.sin(rad(a.lat))*Math.cos(rad(b.lat))*Math.cos(rad(b.lon-a.lon));
+  return (deg(Math.atan2(y,x))+360)%360;
+}
+function angularDiff(a,b){ return Math.abs(((a-b+540)%360)-180); }
+
+async function fetchBikeRoute(start,end){
+  const lonlats=`${start.lon},${start.lat}|${end.lon},${end.lat}`;
+  const url=`https://brouter.de/brouter?lonlats=${encodeURIComponent(lonlats)}&profile=trekking&alternativeidx=0&format=geojson`;
+  const r=await fetch(url);
+  if(!r.ok) throw new Error("BRouter route unavailable");
+  const gj=await r.json();
+  let coords=null;
+  if(gj.type==="FeatureCollection" && gj.features?.length) coords=gj.features[0].geometry?.coordinates;
+  else if(gj.type==="Feature") coords=gj.geometry?.coordinates;
+  else if(gj.type==="LineString") coords=gj.coordinates;
+  if(!coords || coords.length<2) throw new Error("No route geometry");
+  return coords.map(c=>({lon:c[0],lat:c[1]}));
+}
+function routeDistance(points){
+  let km=0;
+  for(let i=1;i<points.length;i++) km += hav(points[i-1], points[i]);
+  return km;
+}
+function routeMidpoint(points){
+  if(points.length<2) return points[0];
+  let total=routeDistance(points), half=total/2, acc=0;
+  for(let i=1;i<points.length;i++){
+    const d=hav(points[i-1], points[i]);
+    if(acc+d >= half) return points[i];
+    acc += d;
+  }
+  return points[Math.floor(points.length/2)];
+}
+function routeWind(points, windFrom, windSpeed){
+  let weightedHead=0, total=0;
+  for(let i=1;i<points.length;i++){
+    const a=points[i-1], b=points[i], d=hav(a,b);
+    if(d<=0) continue;
+    const br=bearing(a,b), diff=angularDiff(windFrom, br);
+    const head=windSpeed*Math.cos(rad(diff));
+    weightedHead += head*d; total += d;
+  }
+  const avg = total ? weightedHead/total : 0;
+  let label="Cross/light wind";
+  if(avg>8) label="Strong headwind";
+  else if(avg>3) label="Headwind";
+  else if(avg<-8) label="Strong tailwind";
+  else if(avg<-3) label="Tailwind";
+  return {avg, label};
+}
+function windScore(avg){ if(avg>8)return 18; if(avg>3)return 9; if(avg<-8)return -8; if(avg<-3)return -4; return 2; }
+function timeLabel(s){ return new Date(s).toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"}); }
+function fmtMm(mm){ return `${(mm||0).toFixed(1)} mm`; }
+function fmtRisk(prob, rain){ return `${Math.round(prob||0)}% · ${(rain||0).toFixed(1)} mm`; }
+function estimateRideMinutes(routeKm, windAvg){
+  const baseSpeed = 16; // sensible commute estimate
+  let penaltyFactor = 1;
+  if(windAvg > 8) penaltyFactor = 1.22;
+  else if(windAvg > 3) penaltyFactor = 1.12;
+  else if(windAvg < -8) penaltyFactor = 0.9;
+  else if(windAvg < -3) penaltyFactor = 0.95;
+  return Math.round((routeKm / baseSpeed) * 60 * penaltyFactor);
+}
+function max3(a,b,c){ return Math.max(a||0,b||0,c||0); }
+
+async function fetchPointForecast(lat,lon){
+  const p = new URLSearchParams({
+    latitude:lat, longitude:lon,
+    current:"temperature_2m,precipitation,rain,wind_speed_10m,wind_direction_10m",
+    hourly:"precipitation_probability,precipitation,rain,temperature_2m,wind_speed_10m,wind_direction_10m",
+    forecast_days:"2",
+    wind_speed_unit:"kmh",
+    timezone:"auto"
+  });
+  const r = await fetch("https://api.open-meteo.com/v1/forecast?"+p.toString());
+  if(!r.ok) throw new Error("Weather service error");
+  return await r.json();
+}
+
+$("check").onclick = async()=>{
+  $("status").textContent="Checking Home, route and ESTEC conditions…";
+  $("result").classList.add("hidden");
+  $("rainPanel").classList.add("hidden");
+  $("forecastCard").classList.add("hidden");
+
+  try{
+    const current = await locate();
+    const home = getHome();
+    if(direction==="toHome" && !home){
+      $("status").textContent="Save your Home position first.";
+      return;
+    }
+
+    const start = direction==="toWork" ? (home || current) : ESTEC;
+    const end   = direction==="toWork" ? ESTEC : home;
+    const savedRouteKm = getDistanceOverride();
+
+    let route = [start,end], routeMsg = "", routeDistanceKm = hav(start,end), routeOk = false;
+    try{
+      route = await fetchBikeRoute(start,end);
+      routeDistanceKm = routeDistance(route);
+      routeOk = true;
+      routeMsg = "Distance and wind use a live bicycle-route lookup.";
+    }catch(e){
+      if(savedRouteKm){
+        routeDistanceKm = savedRouteKm;
+        routeMsg = "⚠️ Live bicycle routing was unavailable. Using your saved custom route distance, with approximate route direction for wind.";
+      }else{
+        routeDistanceKm = hav(start,end);
+        routeMsg = "⚠️ Live bicycle routing was unavailable and no custom route distance is saved. Distance is a straight-line estimate.";
+      }
+    }
+
+    const mid = routeOk ? routeMidpoint(route) : {lat:(start.lat+end.lat)/2, lon:(start.lon+end.lon)/2};
+    const [startWx, midWx, endWx] = await Promise.all([
+      fetchPointForecast(start.lat, start.lon),
+      fetchPointForecast(mid.lat, mid.lon),
+      fetchPointForecast(end.lat, end.lon)
+    ]);
+
+    const nowWind = routeWind(route, midWx.current.wind_direction_10m, midWx.current.wind_speed_10m);
+    const rainNowCombined = max3(startWx.current.rain||startWx.current.precipitation||0, midWx.current.rain||midWx.current.precipitation||0, endWx.current.rain||endWx.current.precipitation||0);
+    const riskNow = max3(
+      startWx.hourly.precipitation_probability[0],
+      midWx.hourly.precipitation_probability[0],
+      endWx.hourly.precipitation_probability[0]
+    );
+    const currentScore = riskNow*0.55 + rainNowCombined*38 + Math.max(0, midWx.current.wind_speed_10m-20)*1.5 + windScore(nowWind.avg);
+
+    let verdict, cls, reason;
+    if(rainNowCombined>=0.5 || riskNow>=70 || currentScore>=55){
+      verdict="WAIT IF YOU CAN"; cls="bad";
+      reason=`Poor conditions across the commute: up to ${riskNow}% rain risk and ${nowWind.label.toLowerCase()}.`;
+    }else if(riskNow>=35 || midWx.current.wind_speed_10m>=28 || currentScore>=28){
+      verdict="CYCLABLE, BUT MIXED"; cls="ok";
+      reason=`Reasonable overall, but expect up to ${riskNow}% rain risk and ${nowWind.label.toLowerCase()}.`;
+    }else{
+      verdict="GOOD TO CYCLE"; cls="good";
+      reason=`Low current weather penalty overall: up to ${riskNow}% rain risk and ${nowWind.label.toLowerCase()}.`;
+    }
+
+    // Build next-hours slots from the 3-point view
+    const nowMs = Date.now();
+    const slots = [];
+    for(let i=0;i<startWx.hourly.time.length;i++){
+      const t = startWx.hourly.time[i];
+      const tm = new Date(t).getTime();
+      if(tm >= nowMs-30*60*1000 && tm <= nowMs+5.5*3600*1000){
+        const homeProb = startWx.hourly.precipitation_probability[i]||0;
+        const homeRain = startWx.hourly.rain[i] ?? startWx.hourly.precipitation[i] ?? 0;
+        const midProb  = midWx.hourly.precipitation_probability[i]||0;
+        const midRain  = midWx.hourly.rain[i] ?? midWx.hourly.precipitation[i] ?? 0;
+        const endProb  = endWx.hourly.precipitation_probability[i]||0;
+        const endRain  = endWx.hourly.rain[i] ?? endWx.hourly.precipitation[i] ?? 0;
+        const combinedProb = max3(homeProb, midProb, endProb);
+        const combinedRain = max3(homeRain, midRain, endRain);
+        const routeWindForSlot = routeWind(route, midWx.hourly.wind_direction_10m[i]||0, midWx.hourly.wind_speed_10m[i]||0);
+        const score = combinedProb*0.55 + combinedRain*38 + Math.max(0,(midWx.hourly.wind_speed_10m[i]||0)-20)*1.5 + windScore(routeWindForSlot.avg);
+        slots.push({
+          t, score,
+          homeProb, homeRain, midProb, midRain, endProb, endRain,
+          routeWind: routeWindForSlot,
+          wind: midWx.hourly.wind_speed_10m[i]||0
+        });
+      }
+    }
+    const best = slots.length ? slots.reduce((a,b)=>a.score<=b.score?a:b) : null;
+
+    $("verdict").className = "verdict "+cls;
+    $("verdict").textContent = verdict;
+    $("reason").textContent = reason;
+
+    $("temp").textContent = Math.round(startWx.current.temperature_2m) + "°C";
+    $("wind").textContent = Math.round(midWx.current.wind_speed_10m) + " km/h";
+    $("windEffect").textContent = nowWind.label;
+    $("distance").textContent = routeDistanceKm.toFixed(1) + " km";
+    $("rideTime").textContent = estimateRideMinutes(routeDistanceKm, nowWind.avg) + " min";
+    $("bestTime").textContent = best ? timeLabel(best.t) : "Now";
+    $("routeNote").textContent = routeMsg + (savedRouteKm ? ` Custom route distance saved: ${savedRouteKm.toFixed(1)} km.` : "");
+
+    $("homeRainNow").textContent = fmtRisk(startWx.hourly.precipitation_probability[0], startWx.current.rain||startWx.current.precipitation||0);
+    $("midRainNow").textContent = fmtRisk(midWx.hourly.precipitation_probability[0], midWx.current.rain||midWx.current.precipitation||0);
+    $("estecRainNow").textContent = fmtRisk(endWx.hourly.precipitation_probability[0], endWx.current.rain||endWx.current.precipitation||0);
+
+    $("timeline").innerHTML = "";
+    slots.slice(0,6).forEach(s=>{
+      const el=document.createElement("div");
+      el.className = "slot"+(best && s.t===best.t ? " best" : "");
+      el.innerHTML = `
+        <div class="time">${timeLabel(s.t)}</div>
+        <div class="line"><strong>Home</strong> · ${Math.round(s.homeProb)}% · ${s.homeRain.toFixed(1)} mm</div>
+        <div class="line"><strong>Route</strong> · ${Math.round(s.midProb)}% · ${s.midRain.toFixed(1)} mm</div>
+        <div class="line"><strong>ESTEC</strong> · ${Math.round(s.endProb)}% · ${s.endRain.toFixed(1)} mm</div>
+        <div class="line">💨 ${Math.round(s.wind)} km/h · ${s.routeWind.label}</div>
+      `;
+      $("timeline").appendChild(el);
+    });
+
+    $("result").classList.remove("hidden");
+    $("rainPanel").classList.remove("hidden");
+    $("forecastCard").classList.remove("hidden");
+    $("status").textContent = "Updated using your saved commute settings.";
+  }catch(e){
+    console.error(e);
+    $("status").textContent = "Could not complete the check. Confirm location permission and internet access, then try again.";
+  }
+};
+
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js"));
+}
 </script>
 </body>
 </html>
