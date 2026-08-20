@@ -4,79 +4,288 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#0b6e4f">
-  <title>Cycle  Weather</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>ESTEC Cycle Weather</title>
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" href="./icon-192.png">
   <style>
-    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
-    body { margin:0; background:#f4f7f6; color:#17211e; }
-    main { max-width:680px; margin:auto; padding:24px; }
-    .card { background:white; border-radius:20px; padding:22px; box-shadow:0 8px 30px rgba(0,0,0,.08); margin:16px 0; }
-    h1 { margin:0 0 6px; }
-    .muted { color:#61706b; }
-    button { width:100%; border:0; padding:15px; border-radius:14px; font-size:17px; font-weight:700; background:#0b6e4f; color:white; }
-    .grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-    .metric { background:#eef5f2; border-radius:14px; padding:14px; }
-    .big { font-size:28px; font-weight:800; }
-    #status { margin-top:12px; }
+    :root{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#17211e}
+    *{box-sizing:border-box}
+    body{margin:0;background:#f3f6f5}
+    main{max-width:720px;margin:auto;padding:16px 14px 40px}
+    .card{background:#fff;border-radius:20px;padding:18px;margin:12px 0;box-shadow:0 7px 24px rgba(0,0,0,.07)}
+    h1{font-size:25px;margin:0 0 3px}
+    h2{font-size:18px;margin:0 0 12px}
+    .muted{color:#68766f;font-size:14px}
+    .tiny{font-size:12px;color:#718079}
+    button{border:0;border-radius:13px;padding:13px 14px;font-size:15px;font-weight:700;cursor:pointer}
+    .primary{background:#0b6e4f;color:#fff;width:100%}
+    .secondary{background:#edf4f1;color:#0b6e4f}
+    .danger{background:#fff1f1;color:#9b2525}
+    .row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+    .row>*{flex:1}
+    .toggle{display:grid;grid-template-columns:1fr 1fr;gap:7px;background:#edf2f0;padding:5px;border-radius:14px}
+    .toggle button{background:transparent;color:#51605a}
+    .toggle button.active{background:#fff;color:#0b6e4f;box-shadow:0 2px 7px rgba(0,0,0,.08)}
+    .hero{padding:20px}
+    .verdict{font-size:30px;font-weight:850;letter-spacing:-.5px;margin:5px 0}
+    .good{color:#087747}.ok{color:#a36b00}.bad{color:#b42318}
+    .metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+    .metric{background:#f0f5f3;border-radius:14px;padding:13px}
+    .metric .label{font-size:12px;color:#68766f}
+    .metric .value{font-size:22px;font-weight:800;margin-top:2px}
+    .timeline{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+    .slot{min-width:105px;background:#f4f7f6;border-radius:13px;padding:11px}
+    .slot.best{outline:2px solid #0b6e4f;background:#edf8f3}
+    .slot .time{font-weight:800}
+    .status{margin-top:10px;font-size:14px}
+    .home-state{display:flex;align-items:center;gap:8px;margin:8px 0}
+    .dot{width:10px;height:10px;border-radius:50%;background:#b9c2be}
+    .dot.saved{background:#0b6e4f}
+    .hidden{display:none!important}
+    .pill{display:inline-block;border-radius:999px;background:#edf4f1;padding:5px 9px;font-size:12px;font-weight:700;color:#0b6e4f}
   </style>
 </head>
 <body>
 <main>
-  <div class="card">
+  <section class="card">
+    <div class="pill">Voorhout ↔ ESTEC</div>
     <h1>🚲 Cycle Weather</h1>
-    <div class="muted">Quick weather check before you ride.</div>
-  </div>
+    <div class="muted">Should I cycle now, or wait for a better window?</div>
+  </section>
 
-  <div class="card">
-    <button id="check">Use my location & check weather</button>
-    <div id="status" class="muted">Tap the button and allow location access.</div>
-  </div>
-
-  <div id="weather" class="card" hidden>
-    <div class="grid">
-      <div class="metric"><div class="muted">Temperature</div><div class="big" id="temp">—</div></div>
-      <div class="metric"><div class="muted">Rain</div><div class="big" id="rain">—</div></div>
-      <div class="metric"><div class="muted">Wind</div><div class="big" id="wind">—</div></div>
-      <div class="metric"><div class="muted">Direction</div><div class="big" id="dir">—</div></div>
+  <section class="card">
+    <h2>1. Your commute</h2>
+    <div class="toggle">
+      <button id="toWork" class="active">🏠 Home → ESTEC</button>
+      <button id="toHome">🛰️ ESTEC → Home</button>
     </div>
-    <p class="muted">Starter version. We can next add your Voorhout ↔ ESTEC route, minute-by-minute rain windows, headwind/tailwind and alarms.</p>
-  </div>
+
+    <div class="home-state">
+      <span id="homeDot" class="dot"></span>
+      <span id="homeText" class="muted">Home position not saved yet</span>
+    </div>
+
+    <div class="row">
+      <button id="saveHome" class="secondary">📍 Save current position as Home</button>
+      <button id="clearHome" class="danger">Forget Home</button>
+    </div>
+    <p class="tiny">Save Home once while you are at home. Coordinates stay only in this browser/app's local storage and are not uploaded to GitHub.</p>
+  </section>
+
+  <section class="card hero">
+    <h2>2. Cycling recommendation</h2>
+    <button id="check" class="primary">Check my ride now</button>
+    <div id="status" class="status muted">Allow location access when Android asks.</div>
+
+    <div id="result" class="hidden">
+      <div id="verdict" class="verdict">—</div>
+      <div id="reason" class="muted"></div>
+      <div class="metrics" style="margin-top:14px">
+        <div class="metric"><div class="label">Temperature</div><div id="temp" class="value">—</div></div>
+        <div class="metric"><div class="label">Rain now</div><div id="rain" class="value">—</div></div>
+        <div class="metric"><div class="label">Wind</div><div id="wind" class="value">—</div></div>
+        <div class="metric"><div class="label">Wind on ride</div><div id="windEffect" class="value">—</div></div>
+        <div class="metric"><div class="label">Approx. distance</div><div id="distance" class="value">—</div></div>
+        <div class="metric"><div class="label">Best departure</div><div id="bestTime" class="value">—</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="forecastCard" class="card hidden">
+    <h2>Next few hours</h2>
+    <div id="timeline" class="timeline"></div>
+    <p class="tiny">Forecast uses Open-Meteo. Wind effect is calculated from the straight-line commute bearing, so it is an estimate rather than turn-by-turn cycling-route wind.</p>
+  </section>
+
+  <section class="card">
+    <h2>ESTEC destination</h2>
+    <div><strong>ESA ESTEC</strong></div>
+    <div class="muted">Keplerlaan 1, Noordwijk</div>
+  </section>
 </main>
+
 <script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
+const ESTEC = {lat:52.218883, lon:4.419712, name:"ESTEC"};
+let direction = "toWork";
+const $ = id => document.getElementById(id);
+
+function getHome(){
+  try { return JSON.parse(localStorage.getItem("cycleHome") || "null"); }
+  catch { return null; }
+}
+function refreshHomeUI(){
+  const h=getHome();
+  $("homeDot").className="dot"+(h?" saved":"");
+  $("homeText").textContent=h ? "Home position saved on this device ✓" : "Home position not saved yet";
+}
+refreshHomeUI();
+
+$("toWork").onclick=()=>{direction="toWork";$("toWork").classList.add("active");$("toHome").classList.remove("active");};
+$("toHome").onclick=()=>{direction="toHome";$("toHome").classList.add("active");$("toWork").classList.remove("active");};
+
+function locate(){
+  return new Promise((resolve,reject)=>{
+    if(!navigator.geolocation) return reject(new Error("Location unavailable"));
+    navigator.geolocation.getCurrentPosition(
+      p=>resolve({lat:p.coords.latitude,lon:p.coords.longitude}),
+      reject,
+      {enableHighAccuracy:true,timeout:15000,maximumAge:60000}
+    );
+  });
 }
 
-const statusEl = document.getElementById('status');
-document.getElementById('check').addEventListener('click', () => {
-  if (!navigator.geolocation) {
-    statusEl.textContent = 'Location is not supported on this device.';
-    return;
+$("saveHome").onclick=async()=>{
+  $("status").textContent="Getting your current position…";
+  try{
+    const p=await locate();
+    localStorage.setItem("cycleHome",JSON.stringify(p));
+    refreshHomeUI();
+    $("status").textContent="Home saved on this phone.";
+  }catch(e){
+    $("status").textContent="Could not save Home. Check Android/Chrome location permission.";
   }
-  statusEl.textContent = 'Getting your location…';
-  navigator.geolocation.getCurrentPosition(async pos => {
-    try {
-      const lat = pos.coords.latitude;
-      const lon = pos.coords.longitude;
-      statusEl.textContent = 'Getting current weather…';
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,precipitation,rain,wind_speed_10m,wind_direction_10m&wind_speed_unit=kmh&timezone=auto`;
-      const r = await fetch(url);
-      const data = await r.json();
-      const c = data.current;
-      document.getElementById('temp').textContent = `${Math.round(c.temperature_2m)}°C`;
-      document.getElementById('rain').textContent = `${c.rain ?? c.precipitation ?? 0} mm`;
-      document.getElementById('wind').textContent = `${Math.round(c.wind_speed_10m)} km/h`;
-      document.getElementById('dir').textContent = `${Math.round(c.wind_direction_10m)}°`;
-      document.getElementById('weather').hidden = false;
-      statusEl.textContent = 'Updated just now.';
-    } catch(e) {
-      statusEl.textContent = 'Could not load weather. Check your internet connection and try again.';
+};
+$("clearHome").onclick=()=>{
+  localStorage.removeItem("cycleHome");
+  refreshHomeUI();
+  $("status").textContent="Saved Home position removed.";
+};
+
+function rad(x){return x*Math.PI/180}
+function deg(x){return x*180/Math.PI}
+function distanceKm(a,b){
+  const R=6371, dLat=rad(b.lat-a.lat), dLon=rad(b.lon-a.lon);
+  const q=Math.sin(dLat/2)**2+Math.cos(rad(a.lat))*Math.cos(rad(b.lat))*Math.sin(dLon/2)**2;
+  return 2*R*Math.asin(Math.sqrt(q));
+}
+function bearing(a,b){
+  const y=Math.sin(rad(b.lon-a.lon))*Math.cos(rad(b.lat));
+  const x=Math.cos(rad(a.lat))*Math.sin(rad(b.lat))-Math.sin(rad(a.lat))*Math.cos(rad(b.lat))*Math.cos(rad(b.lon-a.lon));
+  return (deg(Math.atan2(y,x))+360)%360;
+}
+function angularDiff(a,b){return Math.abs(((a-b+540)%360)-180)}
+function windImpact(windFrom, travelBearing, speed){
+  // Wind direction reported meteorologically: direction FROM which wind comes.
+  const headDiff=angularDiff(windFrom, travelBearing);
+  const headComponent=speed*Math.cos(rad(headDiff));
+  if(headComponent>8) return {label:"Strong headwind", score:18, comp:headComponent};
+  if(headComponent>3) return {label:"Headwind", score:9, comp:headComponent};
+  if(headComponent<-8) return {label:"Strong tailwind", score:-8, comp:headComponent};
+  if(headComponent<-3) return {label:"Tailwind", score:-4, comp:headComponent};
+  return {label:"Cross/light", score:2, comp:headComponent};
+}
+function timeLabel(s){
+  const d=new Date(s);
+  return d.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
+}
+function scoreSlot(prob, rain, windSpeed, windDir, travelBearing){
+  const wi=windImpact(windDir,travelBearing,windSpeed);
+  let score=(prob||0)*0.55+(rain||0)*38+Math.max(0,windSpeed-20)*1.5+wi.score;
+  return {score,wi};
+}
+async function fetchForecast(lat,lon){
+  const params = new URLSearchParams({
+    latitude:lat, longitude:lon,
+    current:"temperature_2m,precipitation,rain,wind_speed_10m,wind_direction_10m",
+    hourly:"temperature_2m,precipitation_probability,precipitation,rain,wind_speed_10m,wind_direction_10m",
+    forecast_days:"2", wind_speed_unit:"kmh", timezone:"auto"
+  });
+  const r=await fetch("https://api.open-meteo.com/v1/forecast?"+params.toString());
+  if(!r.ok) throw new Error("Weather service error");
+  return await r.json();
+}
+
+$("check").onclick=async()=>{
+  $("status").textContent="Checking your position and the next cycling windows…";
+  $("result").classList.add("hidden"); $("forecastCard").classList.add("hidden");
+  try{
+    const current=await locate();
+    const home=getHome();
+
+    if(direction==="toHome" && !home){
+      $("status").textContent="First save your Home position while you are at home. Then the app can evaluate ESTEC → Home.";
+      return;
     }
-  }, err => {
-    statusEl.textContent = 'Location permission was not granted. Allow location access in Chrome and try again.';
-  }, {enableHighAccuracy:true, timeout:10000});
-});
+
+    const start = direction==="toWork" ? (home || current) : ESTEC;
+    const end   = direction==="toWork" ? ESTEC : home;
+
+    // Use the midpoint for route-weather approximation.
+    const mid={lat:(start.lat+end.lat)/2, lon:(start.lon+end.lon)/2};
+    const data=await fetchForecast(mid.lat,mid.lon);
+    const c=data.current;
+    const travelBearing=bearing(start,end);
+    const dist=distanceKm(start,end);
+
+    // Hourly slots from current hour through next 5 hours.
+    const now=Date.now();
+    const slots=[];
+    data.hourly.time.forEach((t,i)=>{
+      const tm=new Date(t).getTime();
+      if(tm>=now-30*60*1000 && tm<=now+5.5*3600*1000){
+        const prob=data.hourly.precipitation_probability[i] ?? 0;
+        const rain=data.hourly.rain[i] ?? data.hourly.precipitation[i] ?? 0;
+        const ws=data.hourly.wind_speed_10m[i] ?? 0;
+        const wd=data.hourly.wind_direction_10m[i] ?? 0;
+        const s=scoreSlot(prob,rain,ws,wd,travelBearing);
+        slots.push({t,prob,rain,ws,wd,score:s.score,wi:s.wi});
+      }
+    });
+
+    const best=slots.length ? slots.reduce((a,b)=>a.score<=b.score?a:b) : null;
+    const currentImpact=windImpact(c.wind_direction_10m,travelBearing,c.wind_speed_10m);
+    const nearest=slots[0] || {prob:0,rain:c.rain||0,score:0};
+    const rainNow=(c.rain ?? c.precipitation ?? 0);
+    const risk=Math.max(nearest.prob||0, rainNow>0?80:0);
+    const currentScore=scoreSlot(risk,rainNow,c.wind_speed_10m,c.wind_direction_10m,travelBearing).score;
+
+    let verdict, cls, reason;
+    if(rainNow>=0.5 || risk>=70 || currentScore>=55){
+      verdict="WAIT IF YOU CAN"; cls="bad";
+      reason=`Poor cycling conditions now: ${risk}% rain risk and ${currentImpact.label.toLowerCase()}.`;
+    } else if(risk>=35 || c.wind_speed_10m>=28 || currentScore>=28){
+      verdict="CYCLABLE, BUT MIXED"; cls="ok";
+      reason=`Reasonable, but expect ${risk}% rain risk and ${currentImpact.label.toLowerCase()}.`;
+    } else {
+      verdict="GOOD TO CYCLE"; cls="good";
+      reason=`Low immediate weather penalty: ${risk}% rain risk, ${currentImpact.label.toLowerCase()}.`;
+    }
+
+    $("verdict").className="verdict "+cls;
+    $("verdict").textContent=verdict;
+    $("reason").textContent=reason;
+    $("temp").textContent=Math.round(c.temperature_2m)+"°C";
+    $("rain").textContent=(rainNow||0).toFixed(1)+" mm";
+    $("wind").textContent=Math.round(c.wind_speed_10m)+" km/h";
+    $("windEffect").textContent=currentImpact.label;
+    $("distance").textContent=dist.toFixed(1)+" km";
+    $("bestTime").textContent=best ? timeLabel(best.t) : "Now";
+
+    $("timeline").innerHTML="";
+    slots.slice(0,6).forEach(s=>{
+      const d=document.createElement("div");
+      d.className="slot"+(best&&s.t===best.t?" best":"");
+      d.innerHTML=`<div class="time">${timeLabel(s.t)}</div>
+        <div>🌧️ ${Math.round(s.prob)}%</div>
+        <div>💧 ${(s.rain||0).toFixed(1)} mm</div>
+        <div>💨 ${Math.round(s.ws)} km/h</div>
+        <div class="tiny">${s.wi.label}</div>`;
+      $("timeline").appendChild(d);
+    });
+    $("result").classList.remove("hidden");
+    $("forecastCard").classList.remove("hidden");
+    $("status").textContent=home ? "Updated using your saved Home ↔ ESTEC commute." : "Home is not saved yet, so this outbound check uses your current position.";
+  }catch(e){
+    console.error(e);
+    $("status").textContent="Could not complete the check. Confirm location permission and internet access, then try again.";
+  }
+};
+
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js"));
+}
 </script>
 </body>
 </html>
