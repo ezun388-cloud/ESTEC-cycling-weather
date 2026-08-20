@@ -6,53 +6,89 @@
   <meta name="theme-color" content="#0b6e4f">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
-  <title>ESTEC Cycle Weather</title>
+  <title>ESTEC Ride Planner</title>
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" href="./icon-192.png">
   <style>
-    :root{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#17211e}
+    :root{
+      --bg:#f4f7f7; --card:#ffffff; --text:#17211e; --muted:#66756e;
+      --green:#0b6e4f; --green2:#2b8a67; --amber:#b97a09; --red:#b1271b;
+      --soft:#eef4f2; --soft2:#f8fbfa;
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    }
     *{box-sizing:border-box}
-    body{margin:0;background:#f3f6f5}
-    main{max-width:720px;margin:auto;padding:16px 14px 40px}
-    .card{background:#fff;border-radius:20px;padding:18px;margin:12px 0;box-shadow:0 7px 24px rgba(0,0,0,.07)}
-    h1{font-size:25px;margin:0 0 3px}
-    h2{font-size:18px;margin:0 0 12px}
-    .muted{color:#68766f;font-size:14px}
-    .tiny{font-size:12px;color:#718079}
-    button{border:0;border-radius:13px;padding:13px 14px;font-size:15px;font-weight:700;cursor:pointer}
-    .primary{background:#0b6e4f;color:#fff;width:100%}
-    .secondary{background:#edf4f1;color:#0b6e4f}
-    .danger{background:#fff1f1;color:#9b2525}
-    .row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+    body{margin:0;background:linear-gradient(180deg,#edf5f1,#f7faf9);color:var(--text)}
+    main{max-width:760px;margin:auto;padding:16px 14px 44px}
+    .card{background:var(--card);border-radius:24px;padding:18px;margin:14px 0;box-shadow:0 10px 32px rgba(0,0,0,.07)}
+    .hero{
+      position:relative; overflow:hidden; padding:0; min-height:260px;
+      background:#123;
+      color:white;
+    }
+    .hero .bg{
+      position:absolute; inset:0; background:
+        linear-gradient(180deg,rgba(4,31,22,.18),rgba(4,31,22,.76)),
+        url('./hero-photo.jpg') center/cover no-repeat;
+      filter:saturate(1.05);
+    }
+    .hero .content{position:relative; z-index:1; padding:20px; display:flex; flex-direction:column; gap:10px; min-height:260px; justify-content:flex-end}
+    .pill{display:inline-block; width:max-content; border-radius:999px; background:rgba(255,255,255,.18); color:#fff; padding:7px 12px; font-size:12px; font-weight:800; backdrop-filter:blur(10px)}
+    .brandRow{display:flex; align-items:center; gap:14px}
+    .brandIcon{width:64px; height:64px; border-radius:18px; background:url('./app-icon.png') center/cover no-repeat; box-shadow:0 8px 18px rgba(0,0,0,.25); border:2px solid rgba(255,255,255,.55); flex:0 0 auto}
+    h1{font-size:34px; line-height:1.05; margin:0}
+    .hero p{margin:0; color:rgba(255,255,255,.92); font-size:15px}
+    h2{font-size:21px; margin:0 0 12px}
+    .muted{color:var(--muted); font-size:14px}
+    .tiny{font-size:12px;color:#74837b}
+    .row{display:flex; gap:10px; flex-wrap:wrap}
     .row>*{flex:1}
-    .toggle{display:grid;grid-template-columns:1fr 1fr;gap:7px;background:#edf2f0;padding:5px;border-radius:14px}
-    .toggle button{background:transparent;color:#51605a}
-    .toggle button.active{background:#fff;color:#0b6e4f;box-shadow:0 2px 7px rgba(0,0,0,.08)}
-    .hero{padding:20px}
-    .verdict{font-size:30px;font-weight:850;letter-spacing:-.5px;margin:5px 0}
-    .good{color:#087747}.ok{color:#a36b00}.bad{color:#b42318}
-    .metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
-    .metric{background:#f0f5f3;border-radius:14px;padding:13px}
-    .metric .label{font-size:12px;color:#68766f}
-    .metric .value{font-size:22px;font-weight:800;margin-top:2px}
-    .timeline{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
-    .slot{min-width:105px;background:#f4f7f6;border-radius:13px;padding:11px}
-    .slot.best{outline:2px solid #0b6e4f;background:#edf8f3}
-    .slot .time{font-weight:800}
-    .status{margin-top:10px;font-size:14px}
-    .home-state{display:flex;align-items:center;gap:8px;margin:8px 0}
-    .dot{width:10px;height:10px;border-radius:50%;background:#b9c2be}
-    .dot.saved{background:#0b6e4f}
+    .toggle{display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:6px; background:var(--soft); border-radius:18px}
+    .toggle button{border:0; background:transparent; color:#51605a; font-size:15px; font-weight:800; padding:14px 12px; border-radius:14px}
+    .toggle button.active{background:#fff; color:var(--green); box-shadow:0 3px 10px rgba(0,0,0,.08)}
+    .homeState{display:flex; align-items:center; gap:10px; margin:10px 0 14px}
+    .dot{width:12px; height:12px; border-radius:50%; background:#b8c1bd}
+    .dot.saved{background:var(--green)}
+    button{border:0; border-radius:15px; padding:14px 16px; font-size:15px; font-weight:800}
+    .primary{background:linear-gradient(180deg,var(--green2),var(--green)); color:#fff; width:100%; box-shadow:0 8px 18px rgba(11,110,79,.2)}
+    .secondary{background:#edf5f1; color:var(--green)}
+    .danger{background:#fff1f1; color:#9d2016}
+    .status{margin-top:10px; font-size:14px}
+    .verdict{font-size:38px; font-weight:900; line-height:1; letter-spacing:-1px; margin:10px 0 8px}
+    .good{color:#0c7b49}.ok{color:#af6e00}.bad{color:#b32318}
+    .metrics{display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-top:12px}
+    .metric{background:var(--soft2); border-radius:18px; padding:14px}
+    .metric .label{font-size:12px; color:var(--muted)}
+    .metric .value{font-size:24px; font-weight:900; margin-top:3px; line-height:1.08}
+    .banner{padding:12px 14px; border-radius:16px; background:#f8fbfa; border:1px solid #eef3f0; margin-top:10px}
+    .infoGrid{display:grid; grid-template-columns:repeat(3,1fr); gap:10px}
+    .pointCard{background:var(--soft2); border-radius:16px; padding:12px}
+    .pointCard .hd{font-weight:900; font-size:13px; margin-bottom:4px}
+    .pointCard .v{font-size:14px}
+    .timeline{display:flex; gap:10px; overflow-x:auto; padding-bottom:6px}
+    .slot{min-width:170px; background:var(--soft2); border-radius:18px; padding:12px}
+    .slot.best{outline:2px solid var(--green); background:#edf8f3}
+    .slot .time{font-size:18px; font-weight:900; margin-bottom:6px}
+    .slot .line{font-size:14px; color:#33413a}
+    .sectionSpacer{height:2px}
     .hidden{display:none!important}
-    .pill{display:inline-block;border-radius:999px;background:#edf4f1;padding:5px 9px;font-size:12px;font-weight:700;color:#0b6e4f}
+    input[type=number]{width:100%; border:1px solid #d9e5df; background:#fff; border-radius:14px; padding:13px; font-size:16px}
+    .subtleCard{background:linear-gradient(180deg,#f8fbfa,#f1f6f4); border:1px solid #e6efeb}
   </style>
 </head>
 <body>
 <main>
-  <section class="card">
-    <div class="pill">Voorhout ↔ ESTEC · v3</div>
-    <h1>🚲 Cycle Weather</h1>
-    <div class="muted">Real bicycle-route distance and route-aware wind.</div>
+  <section class="card hero">
+    <div class="bg"></div>
+    <div class="content">
+      <div class="pill">Voorhout ↔ ESTEC · v4</div>
+      <div class="brandRow">
+        <div class="brandIcon"></div>
+        <div>
+          <h1>ESTEC Ride Planner</h1>
+          <p>Your personal cycle weather dashboard.</p>
+        </div>
+      </div>
+    </div>
   </section>
 
   <section class="card">
@@ -62,7 +98,7 @@
       <button id="toHome">🛰️ ESTEC → Home</button>
     </div>
 
-    <div class="home-state">
+    <div class="homeState">
       <span id="homeDot" class="dot"></span>
       <span id="homeText" class="muted">Home position not saved yet</span>
     </div>
@@ -71,39 +107,68 @@
       <button id="saveHome" class="secondary">📍 Save current position as Home</button>
       <button id="clearHome" class="danger">Forget Home</button>
     </div>
-    <p class="tiny">Save Home once while you are at home. Coordinates stay only in this browser/app's local storage and are not uploaded to GitHub.</p>
+
+    <div class="banner subtleCard">
+      <div style="font-weight:900; margin-bottom:6px;">Route distance override</div>
+      <div class="muted" style="margin-bottom:8px;">If the route engine fails or your route is longer than a straight line, store your real cycling distance here once.</div>
+      <div class="row" style="align-items:end">
+        <div>
+          <div class="tiny" style="margin-bottom:6px;">Actual cycling distance (km)</div>
+          <input id="distanceOverride" type="number" step="0.1" min="0" placeholder="e.g. 7.8">
+        </div>
+        <div style="flex:0 0 150px">
+          <button id="saveDistance" class="secondary" style="width:100%">Save distance</button>
+        </div>
+      </div>
+      <div id="distanceSavedText" class="tiny" style="margin-top:8px;"></div>
+    </div>
   </section>
 
-  <section class="card hero">
-    <h2>2. Cycling recommendation</h2>
+  <section class="card">
+    <h2>2. Check conditions</h2>
     <button id="check" class="primary">Check my ride now</button>
-    <div id="status" class="status muted">Allow location access when Android asks.</div>
+    <div id="status" class="status muted">This version compares Home, route midpoint, and ESTEC weather.</div>
 
     <div id="result" class="hidden">
       <div id="verdict" class="verdict">—</div>
       <div id="reason" class="muted"></div>
-      <div class="metrics" style="margin-top:14px">
+
+      <div class="metrics">
         <div class="metric"><div class="label">Temperature</div><div id="temp" class="value">—</div></div>
-        <div class="metric"><div class="label">Rain now</div><div id="rain" class="value">—</div></div>
         <div class="metric"><div class="label">Wind</div><div id="wind" class="value">—</div></div>
         <div class="metric"><div class="label">Wind on route</div><div id="windEffect" class="value">—</div></div>
         <div class="metric"><div class="label">Cycling route</div><div id="distance" class="value">—</div></div>
+        <div class="metric"><div class="label">Est. ride time</div><div id="rideTime" class="value">—</div></div>
         <div class="metric"><div class="label">Best departure</div><div id="bestTime" class="value">—</div></div>
       </div>
-      <div id="routeNote" class="tiny" style="margin-top:10px;padding:10px 12px;border-radius:12px;background:#f7f9f8"></div>
+
+      <div id="routeNote" class="banner tiny"></div>
     </div>
   </section>
 
-  <section id="forecastCard" class="card hidden">
-    <h2>Next few hours</h2>
-    <div id="timeline" class="timeline"></div>
-    <p class="tiny">Weather uses Open-Meteo. Bicycle routing uses BRouter/OpenStreetMap. Wind is weighted along the actual route geometry.</p>
+  <section id="rainPanel" class="card hidden">
+    <h2>3. Rain view right now</h2>
+    <div class="infoGrid">
+      <div class="pointCard">
+        <div class="hd">🏠 Home</div>
+        <div class="v" id="homeRainNow">—</div>
+      </div>
+      <div class="pointCard">
+        <div class="hd">🚲 Mid-route</div>
+        <div class="v" id="midRainNow">—</div>
+      </div>
+      <div class="pointCard">
+        <div class="hd">🛰️ ESTEC</div>
+        <div class="v" id="estecRainNow">—</div>
+      </div>
+    </div>
+    <div class="tiny" style="margin-top:10px;">This helps avoid the “it says rain, but not at home” problem by showing different points along the commute.</div>
   </section>
 
-  <section class="card">
-    <h2>ESTEC destination</h2>
-    <div><strong>ESA ESTEC</strong></div>
-    <div class="muted">Keplerlaan 1, Noordwijk</div>
+  <section id="forecastCard" class="card hidden">
+    <h2>4. Best hours ahead</h2>
+    <div id="timeline" class="timeline"></div>
+    <div class="tiny" style="margin-top:8px;">Each card combines rain at Home, route midpoint and ESTEC, plus wind. Weather remains model-based, so very local showers can still differ.</div>
   </section>
 </main>
 
@@ -112,53 +177,66 @@ const ESTEC = {lat:52.218883, lon:4.419712, name:"ESTEC"};
 let direction = "toWork";
 const $ = id => document.getElementById(id);
 
-function getHome(){
-  try { return JSON.parse(localStorage.getItem("cycleHome") || "null"); }
-  catch { return null; }
+function getHome(){ try{return JSON.parse(localStorage.getItem("cycleHome")||"null")}catch{return null} }
+function getDistanceOverride(){
+  const v = localStorage.getItem("cycleRouteKm");
+  return v ? Number(v) : null;
+}
+function setDistanceOverride(v){
+  if(v==null || isNaN(v) || v<=0){ localStorage.removeItem("cycleRouteKm"); return; }
+  localStorage.setItem("cycleRouteKm", String(v));
 }
 function refreshHomeUI(){
   const h=getHome();
-  $("homeDot").className="dot"+(h?" saved":"");
-  $("homeText").textContent=h ? "Home position saved on this device ✓" : "Home position not saved yet";
+  $("homeDot").className = "dot" + (h?" saved":"");
+  $("homeText").textContent = h ? "Home position saved on this device ✓" : "Home position not saved yet";
+  const d=getDistanceOverride();
+  $("distanceOverride").value = d || "";
+  $("distanceSavedText").textContent = d ? `Saved route distance: ${d.toFixed(1)} km` : "No custom route distance saved yet.";
 }
 refreshHomeUI();
 
 $("toWork").onclick=()=>{direction="toWork";$("toWork").classList.add("active");$("toHome").classList.remove("active");};
 $("toHome").onclick=()=>{direction="toHome";$("toHome").classList.add("active");$("toWork").classList.remove("active");};
 
+$("saveDistance").onclick=()=>{
+  const v = Number($("distanceOverride").value);
+  if(!v || v<=0){ setDistanceOverride(null); $("distanceSavedText").textContent="Custom route distance cleared."; return; }
+  setDistanceOverride(v);
+  $("distanceSavedText").textContent=`Saved route distance: ${v.toFixed(1)} km`;
+};
+
 function locate(){
   return new Promise((resolve,reject)=>{
     if(!navigator.geolocation) return reject(new Error("Location unavailable"));
     navigator.geolocation.getCurrentPosition(
-      p=>resolve({lat:p.coords.latitude,lon:p.coords.longitude}),
+      p=>resolve({lat:p.coords.latitude, lon:p.coords.longitude}),
       reject,
-      {enableHighAccuracy:true,timeout:15000,maximumAge:60000}
+      {enableHighAccuracy:true, timeout:15000, maximumAge:60000}
     );
   });
 }
-
 $("saveHome").onclick=async()=>{
   $("status").textContent="Getting your current position…";
   try{
     const p=await locate();
-    localStorage.setItem("cycleHome",JSON.stringify(p));
+    localStorage.setItem("cycleHome", JSON.stringify(p));
     refreshHomeUI();
-    $("status").textContent="Home saved on this phone.";
+    $("status").textContent="Home saved on this device.";
   }catch(e){
-    $("status").textContent="Could not save Home. Check Android/Chrome location permission.";
+    $("status").textContent="Could not save Home. Check location permission.";
   }
 };
 $("clearHome").onclick=()=>{
   localStorage.removeItem("cycleHome");
   refreshHomeUI();
-  $("status").textContent="Saved Home position removed.";
+  $("status").textContent="Saved Home removed.";
 };
 
-function rad(x){return x*Math.PI/180}
-function deg(x){return x*180/Math.PI}
-function distanceKm(a,b){
+const rad=x=>x*Math.PI/180, deg=x=>x*180/Math.PI;
+function hav(a,b){
   const R=6371, dLat=rad(b.lat-a.lat), dLon=rad(b.lon-a.lon);
-  const q=Math.sin(dLat/2)**2+Math.cos(rad(a.lat))*Math.cos(rad(b.lat))*Math.sin(dLon/2)**2;
+  const q=Math.sin(dLat/2)**2 + Math.cos(rad(a.lat))*Math.cos(rad(b.lat))*Math.sin(dLon/2)**2;
   return 2*R*Math.asin(Math.sqrt(q));
 }
 function bearing(a,b){
@@ -166,8 +244,7 @@ function bearing(a,b){
   const x=Math.cos(rad(a.lat))*Math.sin(rad(b.lat))-Math.sin(rad(a.lat))*Math.cos(rad(b.lat))*Math.cos(rad(b.lon-a.lon));
   return (deg(Math.atan2(y,x))+360)%360;
 }
-function angularDiff(a,b){return Math.abs(((a-b+540)%360)-180)}
-function timeLabel(s){return new Date(s).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});}
+function angularDiff(a,b){ return Math.abs(((a-b+540)%360)-180); }
 
 async function fetchBikeRoute(start,end){
   const lonlats=`${start.lon},${start.lat}|${end.lon},${end.lat}`;
@@ -183,113 +260,193 @@ async function fetchBikeRoute(start,end){
   return coords.map(c=>({lon:c[0],lat:c[1]}));
 }
 function routeDistance(points){
-  let km=0; for(let i=1;i<points.length;i++) km+=distanceKm(points[i-1],points[i]); return km;
+  let km=0;
+  for(let i=1;i<points.length;i++) km += hav(points[i-1], points[i]);
+  return km;
 }
 function routeMidpoint(points){
-  const total=routeDistance(points), half=total/2; let acc=0;
-  for(let i=1;i<points.length;i++){const d=distanceKm(points[i-1],points[i]); if(acc+d>=half) return points[i]; acc+=d;}
+  if(points.length<2) return points[0];
+  let total=routeDistance(points), half=total/2, acc=0;
+  for(let i=1;i<points.length;i++){
+    const d=hav(points[i-1], points[i]);
+    if(acc+d >= half) return points[i];
+    acc += d;
+  }
   return points[Math.floor(points.length/2)];
 }
-function routeWind(points,windFrom,windSpeed){
-  let weighted=0,total=0,maxHead=-999,maxTail=999;
+function routeWind(points, windFrom, windSpeed){
+  let weightedHead=0, total=0;
   for(let i=1;i<points.length;i++){
-    const a=points[i-1],b=points[i],d=distanceKm(a,b); if(d<=0) continue;
-    const br=bearing(a,b), diff=angularDiff(windFrom,br);
+    const a=points[i-1], b=points[i], d=hav(a,b);
+    if(d<=0) continue;
+    const br=bearing(a,b), diff=angularDiff(windFrom, br);
     const head=windSpeed*Math.cos(rad(diff));
-    weighted+=head*d; total+=d; maxHead=Math.max(maxHead,head); maxTail=Math.min(maxTail,head);
+    weightedHead += head*d; total += d;
   }
-  const avg=total?weighted/total:0;
+  const avg = total ? weightedHead/total : 0;
   let label="Cross/light wind";
-  if(avg>8) label="Strong headwind"; else if(avg>3) label="Headwind"; else if(avg<-8) label="Strong tailwind"; else if(avg<-3) label="Tailwind";
-  return {avg,label,maxHead,maxTail};
+  if(avg>8) label="Strong headwind";
+  else if(avg>3) label="Headwind";
+  else if(avg<-8) label="Strong tailwind";
+  else if(avg<-3) label="Tailwind";
+  return {avg, label};
 }
-function windScore(avg){if(avg>8)return 18;if(avg>3)return 9;if(avg<-8)return -8;if(avg<-3)return -4;return 2;}
-function scoreSlot(prob,rain,windSpeed,routeWindAvg){
-  return (prob||0)*0.55+(rain||0)*38+Math.max(0,windSpeed-20)*1.5+windScore(routeWindAvg);
+function windScore(avg){ if(avg>8)return 18; if(avg>3)return 9; if(avg<-8)return -8; if(avg<-3)return -4; return 2; }
+function timeLabel(s){ return new Date(s).toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"}); }
+function fmtMm(mm){ return `${(mm||0).toFixed(1)} mm`; }
+function fmtRisk(prob, rain){ return `${Math.round(prob||0)}% · ${(rain||0).toFixed(1)} mm`; }
+function estimateRideMinutes(routeKm, windAvg){
+  const baseSpeed = 16; // sensible commute estimate
+  let penaltyFactor = 1;
+  if(windAvg > 8) penaltyFactor = 1.22;
+  else if(windAvg > 3) penaltyFactor = 1.12;
+  else if(windAvg < -8) penaltyFactor = 0.9;
+  else if(windAvg < -3) penaltyFactor = 0.95;
+  return Math.round((routeKm / baseSpeed) * 60 * penaltyFactor);
 }
-async function fetchForecast(lat,lon){
-  const params=new URLSearchParams({
-    latitude:lat,longitude:lon,
+function max3(a,b,c){ return Math.max(a||0,b||0,c||0); }
+
+async function fetchPointForecast(lat,lon){
+  const p = new URLSearchParams({
+    latitude:lat, longitude:lon,
     current:"temperature_2m,precipitation,rain,wind_speed_10m,wind_direction_10m",
-    hourly:"temperature_2m,precipitation_probability,precipitation,rain,wind_speed_10m,wind_direction_10m",
-    forecast_days:"2",wind_speed_unit:"kmh",timezone:"auto"
+    hourly:"precipitation_probability,precipitation,rain,temperature_2m,wind_speed_10m,wind_direction_10m",
+    forecast_days:"2",
+    wind_speed_unit:"kmh",
+    timezone:"auto"
   });
-  const r=await fetch("https://api.open-meteo.com/v1/forecast?"+params.toString());
+  const r = await fetch("https://api.open-meteo.com/v1/forecast?"+p.toString());
   if(!r.ok) throw new Error("Weather service error");
   return await r.json();
 }
 
-$("check").onclick=async()=>{
-  $("status").textContent="Finding your bicycle route and checking weather…";
-  $("result").classList.add("hidden"); $("forecastCard").classList.add("hidden");
+$("check").onclick = async()=>{
+  $("status").textContent="Checking Home, route and ESTEC conditions…";
+  $("result").classList.add("hidden");
+  $("rainPanel").classList.add("hidden");
+  $("forecastCard").classList.add("hidden");
+
   try{
-    const current=await locate();
-    const home=getHome();
-    if(direction==="toHome" && !home){$("status").textContent="First save your Home position while you are at home.";return;}
-    const start=direction==="toWork" ? (home||current) : ESTEC;
-    const end=direction==="toWork" ? ESTEC : home;
+    const current = await locate();
+    const home = getHome();
+    if(direction==="toHome" && !home){
+      $("status").textContent="Save your Home position first.";
+      return;
+    }
 
-    let route,realRoute=true,routeMsg="";
+    const start = direction==="toWork" ? (home || current) : ESTEC;
+    const end   = direction==="toWork" ? ESTEC : home;
+    const savedRouteKm = getDistanceOverride();
+
+    let route = [start,end], routeMsg = "", routeDistanceKm = hav(start,end), routeOk = false;
     try{
-      route=await fetchBikeRoute(start,end);
-      routeMsg="Distance and wind use the bicycle route returned by BRouter/OpenStreetMap.";
+      route = await fetchBikeRoute(start,end);
+      routeDistanceKm = routeDistance(route);
+      routeOk = true;
+      routeMsg = "Distance and wind use a live bicycle-route lookup.";
     }catch(e){
-      console.warn(e); realRoute=false; route=[start,end];
-      routeMsg="⚠️ Bicycle routing was temporarily unavailable. Distance and wind are fallback straight-line estimates.";
-    }
-
-    const dist=routeDistance(route);
-    const mid=routeMidpoint(route);
-    const data=await fetchForecast(mid.lat,mid.lon);
-    const c=data.current;
-    const currentImpact=routeWind(route,c.wind_direction_10m,c.wind_speed_10m);
-
-    const now=Date.now(), slots=[];
-    data.hourly.time.forEach((t,i)=>{
-      const tm=new Date(t).getTime();
-      if(tm>=now-30*60*1000 && tm<=now+5.5*3600*1000){
-        const prob=data.hourly.precipitation_probability[i]??0;
-        const rain=data.hourly.rain[i]??data.hourly.precipitation[i]??0;
-        const ws=data.hourly.wind_speed_10m[i]??0;
-        const wd=data.hourly.wind_direction_10m[i]??0;
-        const rw=routeWind(route,wd,ws);
-        slots.push({t,prob,rain,ws,wd,rw,score:scoreSlot(prob,rain,ws,rw.avg)});
+      if(savedRouteKm){
+        routeDistanceKm = savedRouteKm;
+        routeMsg = "⚠️ Live bicycle routing was unavailable. Using your saved custom route distance, with approximate route direction for wind.";
+      }else{
+        routeDistanceKm = hav(start,end);
+        routeMsg = "⚠️ Live bicycle routing was unavailable and no custom route distance is saved. Distance is a straight-line estimate.";
       }
-    });
-
-    const best=slots.length ? slots.reduce((a,b)=>a.score<=b.score?a:b) : null;
-    const nearest=slots[0]||{prob:0};
-    const rainNow=c.rain??c.precipitation??0;
-    const risk=Math.max(nearest.prob||0,rainNow>0?80:0);
-    const currentScore=scoreSlot(risk,rainNow,c.wind_speed_10m,currentImpact.avg);
-
-    let verdict,cls,reason;
-    if(rainNow>=0.5 || risk>=70 || currentScore>=55){
-      verdict="WAIT IF YOU CAN";cls="bad";reason=`Poor cycling conditions now: ${risk}% rain risk and ${currentImpact.label.toLowerCase()}.`;
-    } else if(risk>=35 || c.wind_speed_10m>=28 || currentScore>=28){
-      verdict="CYCLABLE, BUT MIXED";cls="ok";reason=`Reasonable, but expect ${risk}% rain risk and ${currentImpact.label.toLowerCase()}.`;
-    } else {
-      verdict="GOOD TO CYCLE";cls="good";reason=`Low immediate weather penalty: ${risk}% rain risk, ${currentImpact.label.toLowerCase()}.`;
     }
 
-    $("verdict").className="verdict "+cls; $("verdict").textContent=verdict; $("reason").textContent=reason;
-    $("temp").textContent=Math.round(c.temperature_2m)+"°C";
-    $("rain").textContent=rainNow.toFixed(1)+" mm";
-    $("wind").textContent=Math.round(c.wind_speed_10m)+" km/h";
-    $("windEffect").textContent=currentImpact.label;
-    $("distance").textContent=dist.toFixed(1)+" km";
-    $("bestTime").textContent=best?timeLabel(best.t):"Now";
-    $("routeNote").textContent=routeMsg+(realRoute?` Average route headwind component: ${currentImpact.avg.toFixed(1)} km/h.`:"");
+    const mid = routeOk ? routeMidpoint(route) : {lat:(start.lat+end.lat)/2, lon:(start.lon+end.lon)/2};
+    const [startWx, midWx, endWx] = await Promise.all([
+      fetchPointForecast(start.lat, start.lon),
+      fetchPointForecast(mid.lat, mid.lon),
+      fetchPointForecast(end.lat, end.lon)
+    ]);
 
-    $("timeline").innerHTML="";
+    const nowWind = routeWind(route, midWx.current.wind_direction_10m, midWx.current.wind_speed_10m);
+    const rainNowCombined = max3(startWx.current.rain||startWx.current.precipitation||0, midWx.current.rain||midWx.current.precipitation||0, endWx.current.rain||endWx.current.precipitation||0);
+    const riskNow = max3(
+      startWx.hourly.precipitation_probability[0],
+      midWx.hourly.precipitation_probability[0],
+      endWx.hourly.precipitation_probability[0]
+    );
+    const currentScore = riskNow*0.55 + rainNowCombined*38 + Math.max(0, midWx.current.wind_speed_10m-20)*1.5 + windScore(nowWind.avg);
+
+    let verdict, cls, reason;
+    if(rainNowCombined>=0.5 || riskNow>=70 || currentScore>=55){
+      verdict="WAIT IF YOU CAN"; cls="bad";
+      reason=`Poor conditions across the commute: up to ${riskNow}% rain risk and ${nowWind.label.toLowerCase()}.`;
+    }else if(riskNow>=35 || midWx.current.wind_speed_10m>=28 || currentScore>=28){
+      verdict="CYCLABLE, BUT MIXED"; cls="ok";
+      reason=`Reasonable overall, but expect up to ${riskNow}% rain risk and ${nowWind.label.toLowerCase()}.`;
+    }else{
+      verdict="GOOD TO CYCLE"; cls="good";
+      reason=`Low current weather penalty overall: up to ${riskNow}% rain risk and ${nowWind.label.toLowerCase()}.`;
+    }
+
+    // Build next-hours slots from the 3-point view
+    const nowMs = Date.now();
+    const slots = [];
+    for(let i=0;i<startWx.hourly.time.length;i++){
+      const t = startWx.hourly.time[i];
+      const tm = new Date(t).getTime();
+      if(tm >= nowMs-30*60*1000 && tm <= nowMs+5.5*3600*1000){
+        const homeProb = startWx.hourly.precipitation_probability[i]||0;
+        const homeRain = startWx.hourly.rain[i] ?? startWx.hourly.precipitation[i] ?? 0;
+        const midProb  = midWx.hourly.precipitation_probability[i]||0;
+        const midRain  = midWx.hourly.rain[i] ?? midWx.hourly.precipitation[i] ?? 0;
+        const endProb  = endWx.hourly.precipitation_probability[i]||0;
+        const endRain  = endWx.hourly.rain[i] ?? endWx.hourly.precipitation[i] ?? 0;
+        const combinedProb = max3(homeProb, midProb, endProb);
+        const combinedRain = max3(homeRain, midRain, endRain);
+        const routeWindForSlot = routeWind(route, midWx.hourly.wind_direction_10m[i]||0, midWx.hourly.wind_speed_10m[i]||0);
+        const score = combinedProb*0.55 + combinedRain*38 + Math.max(0,(midWx.hourly.wind_speed_10m[i]||0)-20)*1.5 + windScore(routeWindForSlot.avg);
+        slots.push({
+          t, score,
+          homeProb, homeRain, midProb, midRain, endProb, endRain,
+          routeWind: routeWindForSlot,
+          wind: midWx.hourly.wind_speed_10m[i]||0
+        });
+      }
+    }
+    const best = slots.length ? slots.reduce((a,b)=>a.score<=b.score?a:b) : null;
+
+    $("verdict").className = "verdict "+cls;
+    $("verdict").textContent = verdict;
+    $("reason").textContent = reason;
+
+    $("temp").textContent = Math.round(startWx.current.temperature_2m) + "°C";
+    $("wind").textContent = Math.round(midWx.current.wind_speed_10m) + " km/h";
+    $("windEffect").textContent = nowWind.label;
+    $("distance").textContent = routeDistanceKm.toFixed(1) + " km";
+    $("rideTime").textContent = estimateRideMinutes(routeDistanceKm, nowWind.avg) + " min";
+    $("bestTime").textContent = best ? timeLabel(best.t) : "Now";
+    $("routeNote").textContent = routeMsg + (savedRouteKm ? ` Custom route distance saved: ${savedRouteKm.toFixed(1)} km.` : "");
+
+    $("homeRainNow").textContent = fmtRisk(startWx.hourly.precipitation_probability[0], startWx.current.rain||startWx.current.precipitation||0);
+    $("midRainNow").textContent = fmtRisk(midWx.hourly.precipitation_probability[0], midWx.current.rain||midWx.current.precipitation||0);
+    $("estecRainNow").textContent = fmtRisk(endWx.hourly.precipitation_probability[0], endWx.current.rain||endWx.current.precipitation||0);
+
+    $("timeline").innerHTML = "";
     slots.slice(0,6).forEach(s=>{
-      const d=document.createElement("div"); d.className="slot"+(best&&s.t===best.t?" best":"");
-      d.innerHTML=`<div class="time">${timeLabel(s.t)}</div><div>🌧️ ${Math.round(s.prob)}%</div><div>💧 ${(s.rain||0).toFixed(1)} mm</div><div>💨 ${Math.round(s.ws)} km/h</div><div class="tiny">${s.rw.label}</div>`;
-      $("timeline").appendChild(d);
+      const el=document.createElement("div");
+      el.className = "slot"+(best && s.t===best.t ? " best" : "");
+      el.innerHTML = `
+        <div class="time">${timeLabel(s.t)}</div>
+        <div class="line"><strong>Home</strong> · ${Math.round(s.homeProb)}% · ${s.homeRain.toFixed(1)} mm</div>
+        <div class="line"><strong>Route</strong> · ${Math.round(s.midProb)}% · ${s.midRain.toFixed(1)} mm</div>
+        <div class="line"><strong>ESTEC</strong> · ${Math.round(s.endProb)}% · ${s.endRain.toFixed(1)} mm</div>
+        <div class="line">💨 ${Math.round(s.wind)} km/h · ${s.routeWind.label}</div>
+      `;
+      $("timeline").appendChild(el);
     });
-    $("result").classList.remove("hidden"); $("forecastCard").classList.remove("hidden");
-    $("status").textContent=realRoute?"Updated using your Home ↔ ESTEC bicycle route.":"Updated with routing fallback.";
-  }catch(e){console.error(e);$("status").textContent="Could not complete the check. Confirm location permission and internet access, then try again.";}
+
+    $("result").classList.remove("hidden");
+    $("rainPanel").classList.remove("hidden");
+    $("forecastCard").classList.remove("hidden");
+    $("status").textContent = "Updated using your saved commute settings.";
+  }catch(e){
+    console.error(e);
+    $("status").textContent = "Could not complete the check. Confirm location permission and internet access, then try again.";
+  }
 };
 
 if("serviceWorker" in navigator){

@@ -1,11 +1,11 @@
 {
-  "name": "ESTEC Cycle Weather",
-  "short_name": "Cycle Weather",
-  "description": "Route-aware cycling weather for the Voorhout\u2013ESTEC commute.",
+  "name": "ESTEC Ride Planner",
+  "short_name": "Ride Planner",
+  "description": "Personal cycle weather planner for the Voorhout\u2013ESTEC commute.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f3f6f5",
+  "background_color": "#f4f7f7",
   "theme_color": "#0b6e4f",
   "icons": [
     {
