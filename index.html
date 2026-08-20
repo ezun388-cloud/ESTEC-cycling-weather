@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0b6e4f">
+  <title>Cycle Weather</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" href="./icon-192.png">
+  <style>
+    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+    body { margin:0; background:#f4f7f6; color:#17211e; }
+    main { max-width:680px; margin:auto; padding:24px; }
+    .card { background:white; border-radius:20px; padding:22px; box-shadow:0 8px 30px rgba(0,0,0,.08); margin:16px 0; }
+    h1 { margin:0 0 6px; }
+    .muted { color:#61706b; }
+    button { width:100%; border:0; padding:15px; border-radius:14px; font-size:17px; font-weight:700; background:#0b6e4f; color:white; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .metric { background:#eef5f2; border-radius:14px; padding:14px; }
+    .big { font-size:28px; font-weight:800; }
+    #status { margin-top:12px; }
+  </style>
+</head>
+<body>
+<main>
+  <div class="card">
+    <h1>🚲 Cycle Weather</h1>
+    <div class="muted">Quick weather check before you ride.</div>
+  </div>
+
+  <div class="card">
+    <button id="check">Use my location & check weather</button>
+    <div id="status" class="muted">Tap the button and allow location access.</div>
+  </div>
+
+  <div id="weather" class="card" hidden>
+    <div class="grid">
+      <div class="metric"><div class="muted">Temperature</div><div class="big" id="temp">—</div></div>
+      <div class="metric"><div class="muted">Rain</div><div class="big" id="rain">—</div></div>
+      <div class="metric"><div class="muted">Wind</div><div class="big" id="wind">—</div></div>
+      <div class="metric"><div class="muted">Direction</div><div class="big" id="dir">—</div></div>
+    </div>
+    <p class="muted">Starter version. We can next add your Voorhout ↔ ESTEC route, minute-by-minute rain windows, headwind/tailwind and alarms.</p>
+  </div>
+</main>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
+}
+
+const statusEl = document.getElementById('status');
+document.getElementById('check').addEventListener('click', () => {
+  if (!navigator.geolocation) {
+    statusEl.textContent = 'Location is not supported on this device.';
+    return;
+  }
+  statusEl.textContent = 'Getting your location…';
+  navigator.geolocation.getCurrentPosition(async pos => {
+    try {
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+      statusEl.textContent = 'Getting current weather…';
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,precipitation,rain,wind_speed_10m,wind_direction_10m&wind_speed_unit=kmh&timezone=auto`;
+      const r = await fetch(url);
+      const data = await r.json();
+      const c = data.current;
+      document.getElementById('temp').textContent = `${Math.round(c.temperature_2m)}°C`;
+      document.getElementById('rain').textContent = `${c.rain ?? c.precipitation ?? 0} mm`;
+      document.getElementById('wind').textContent = `${Math.round(c.wind_speed_10m)} km/h`;
+      document.getElementById('dir').textContent = `${Math.round(c.wind_direction_10m)}°`;
+      document.getElementById('weather').hidden = false;
+      statusEl.textContent = 'Updated just now.';
+    } catch(e) {
+      statusEl.textContent = 'Could not load weather. Check your internet connection and try again.';
+    }
+  }, err => {
+    statusEl.textContent = 'Location permission was not granted. Allow location access in Chrome and try again.';
+  }, {enableHighAccuracy:true, timeout:10000});
+});
+</script>
+</body>
+</html>
