@@ -1,7 +1,7 @@
 {
-  "name": "ESTEC Ride Planner",
-  "short_name": "Ride Planner",
-  "description": "Personal cycle weather planner for the Voorhout\u2013ESTEC commute.",
+  "name": "Ride Weather",
+  "short_name": "Ride Weather",
+  "description": "Route-aware cycling weather with OpenStreetMap bicycle routing.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
